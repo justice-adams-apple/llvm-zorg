@@ -3,6 +3,8 @@ pipeline {
 
     parameters {
         string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
+
+        booleanParam(name: 'SKIP_UPLOAD', defaultValue: params.SKIP_UPLOAD ?: false, description: 'Skip upload of built artifacts')
     }
 
     stages {
@@ -31,6 +33,10 @@ pipeline {
             }
         }
         stage('Build') {
+            environment {
+                EXTRA_ARGS = params.SKIP_UPLOAD ? "--noupload" : ""
+            }
+
             steps {
                 timeout(120) {
                     sh '''
@@ -57,7 +63,7 @@ pipeline {
                     # Set a MacOS minimum deployment target
                     export MACOSX_DEPLOYMENT_TARGET=10.14
 
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang"
+                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" $EXTRA_ARGS
 
                     # Removing the local artifact
                     rm -rf clang-*.tar.gz

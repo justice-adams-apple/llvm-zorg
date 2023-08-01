@@ -6,6 +6,7 @@ pipeline {
     parameters {
         string(name: 'GIT_SHA', defaultValue: params.GIT_SHA ?: '*/main', description: 'Git revision to build')
         string(name: 'ARTIFACT', defaultValue: 'clang-stage1-RA/latest', description: 'description')
+        booleanParam(name: 'SKIP_UPLOAD', defaultValue: params.SKIP_UPLOAD ?: false, description: 'Skip upload of built artifacts')
     }
 
     stages {
@@ -34,6 +35,10 @@ pipeline {
             }
         }
         stage('Build') {
+            environment {
+                EXTRA_ARGS = params.SKIP_UPLOAD ? "--noupload" : ""
+            }
+
             steps {
                 timeout(600) {
                     sh '''
@@ -60,7 +65,8 @@ pipeline {
                     python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
                     python llvm-zorg/zorg/jenkins/monorepo_build.py clang build \
                       --thinlto --projects="clang;compiler-rt" \
-                      --cmake-flag="-DCMAKE_DSYMUTIL=$WORKSPACE/host-compiler/bin/dsymutil"
+                      --cmake-flag="-DCMAKE_DSYMUTIL=$WORKSPACE/host-compiler/bin/dsymutil" \
+                      $EXTRA_ARGS
                     '''
                 }
             }
