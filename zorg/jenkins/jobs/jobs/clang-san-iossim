@@ -2,7 +2,7 @@ pipeline {
     agent { label 'green-dragon-08' }
 
     parameters {
-        string(name: 'GIT_REVISION', defaultValue: '*/main', description: 'Git revision to build')
+        string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
     }
 
     stages {

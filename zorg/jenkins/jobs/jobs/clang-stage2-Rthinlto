@@ -4,7 +4,7 @@ pipeline {
     options { disableResume() }
 
     parameters {
-        string(name: 'GIT_SHA', defaultValue: '*/main', description: 'Git revision to build')
+        string(name: 'GIT_SHA', defaultValue: params.GIT_SHA ?: '*/main', description: 'Git revision to build')
         string(name: 'ARTIFACT', defaultValue: 'clang-stage1-RA/latest', description: 'description')
     }
 
