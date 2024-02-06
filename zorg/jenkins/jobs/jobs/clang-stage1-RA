@@ -45,6 +45,10 @@ pipeline {
                     set -u
                     rm -rf build.properties
 
+                    // install zorg requirements in virtual env
+                    python3 -m venv venv
+                    venv/bin/python -m pip install -r ./llvm-zorg/requirements.txt
+
                     cd llvm-project
                     git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
 
@@ -69,7 +73,7 @@ pipeline {
                     export MACOSX_DEPLOYMENT_TARGET=10.14
 
                     rm -rf clang-build clang-install *.tar.gz
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
+                    venv/bin/python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
                       --assertions --cmake-type=RelWithDebInfo \
                       --projects="clang;clang-tools-extra;compiler-rt"
                     '''
@@ -82,7 +86,7 @@ pipeline {
                     sh '''
                     set -u
                     export PATH=$PATH:/usr/bin:/usr/local/bin
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
+                    venv/bin/python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
                     '''
                 }
                 junit 'clang-build/**/testresults.xunit.xml'
@@ -90,22 +94,6 @@ pipeline {
         }
     }
     post {
-        always {
-            scanForIssues tool: clang()
-        }
-        regression {
-            emailext subject: '$DEFAULT_SUBJECT',
-                    presendScript: '$DEFAULT_PRESEND_SCRIPT',
-                    postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
-                    recipientProviders: [
-                            [$class: 'CulpritsRecipientProvider'],
-                            [$class: 'DevelopersRecipientProvider'],
-                            [$class: 'RequesterRecipientProvider'],
-                    ],
-                    replyTo: '$DEFAULT_REPLYTO',
-                    to: '$DEFAULT_RECIPIENTS',
-                    body:'$DEFAULT_CONTENT'
-        }
         success {
             script {
                 if (!params.SKIP_TRIGGER) {
