@@ -15,7 +15,7 @@ import requests
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 
-SERVER = "green-dragon-21.local"
+BUCKET = os.environ.get("S3_BUCKET")
 
 NINJA = "/usr/local/bin/ninja"
 
@@ -840,36 +840,13 @@ def build_upload_artifact():
 
     run_cmd(conf.installdir(), tar)
 
-    mkdir_cmd = ["ssh", "buildslave@" + SERVER, "mkdir", "-p", "/Library/WebServer/Documents/artifacts/" + conf.job_name]
-
-    run_cmd(conf.workspace, mkdir_cmd)
-
-    upload_cmd = ["scp", artifact_name,
-                  "buildslave@" + SERVER + ":/Library/WebServer/Documents/artifacts/" +
-                  conf.job_name + "/"]
+    upload_cmd = ["aws", "s3", "cp", artifact_name, f"s3://{BUCKET}"]
 
     run_cmd(conf.workspace, upload_cmd)
 
-    upload_cmd = ["scp", prop_file,
-                  "buildslave@" + SERVER + ":/Library/WebServer/Documents/artifacts/" +
-                  conf.job_name + "/"]
+    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}"]
 
     run_cmd(conf.workspace, upload_cmd)
-
-    ln_cmd = ["ssh", "buildslave@" + SERVER,
-              "ln", "-fs", "/Library/WebServer/Documents/artifacts/" +
-              conf.job_name + "/" + artifact_name,
-              "/Library/WebServer/Documents/artifacts/" +
-              conf.job_name + "/latest"]
-
-    run_cmd(conf.workspace, ln_cmd)
-
-    lng_cmd = ["ssh", "buildslave@" + SERVER,
-               "ln", "-fs", "/Library/WebServer/Documents/artifacts/" +
-               conf.job_name + "/" + artifact_name,
-               "/Library/WebServer/Documents/artifacts/" +
-               conf.job_name + "/g" + conf.git_sha]
-    run_cmd(conf.workspace, lng_cmd)
 
 def build_upload_properties():
     """Create artifact for this build, and upload to server."""
@@ -884,13 +861,7 @@ def build_upload_properties():
         prop_fd.write("GIT_DISTANCE={}\n".format(conf.git_distance))
         prop_fd.write("GIT_SHA={}\n".format(conf.git_sha))
 
-    mkdir_cmd = ["ssh", "buildslave@" + SERVER, "mkdir", "-p", "/Library/WebServer/Documents/artifacts/" + conf.job_name]
-
-    run_cmd(conf.workspace, mkdir_cmd)
-
-    upload_cmd = ["scp", prop_file,
-                  "buildslave@" + SERVER + ":/Library/WebServer/Documents/artifacts/" +
-                  conf.job_name + "/"]
+    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}"]
 
     run_cmd(conf.workspace, upload_cmd)
 
