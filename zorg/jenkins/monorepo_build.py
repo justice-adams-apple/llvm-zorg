@@ -840,13 +840,27 @@ def build_upload_artifact():
 
     run_cmd(conf.installdir(), tar)
 
-    upload_cmd = ["aws", "s3", "cp", artifact_name, f"s3://{BUCKET}"]
+    upload_cmd = ["aws", "s3", "cp", artifact_name, f"s3://{BUCKET}/{conf.job_name}/"]
 
     run_cmd(conf.workspace, upload_cmd)
 
-    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}"]
+    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}/{conf.job_name}/"]
 
     run_cmd(conf.workspace, upload_cmd)
+
+    with open('latest', 'w') as latest:
+        latest.write(f"{conf.job_name}/{artifact_name}")
+
+    ln_cmd = ["aws", "s3", "cp", 'latest', f"s3://{BUCKET}/{conf.job_name}/"]
+
+    run_cmd(conf.workspace, ln_cmd)
+
+    with open(f"g{conf.git_sha}", 'w') as sha:
+        sha.write(f"{conf.job_name}/{artifact_name}")
+
+    lng_cmd = ["aws", "s3", "cp", f"g{conf.git_sha}", f"s3://{BUCKET}/{conf.job_name}/"]
+
+    run_cmd(conf.workspace, lng_cmd)
 
 def build_upload_properties():
     """Create artifact for this build, and upload to server."""
@@ -861,7 +875,7 @@ def build_upload_properties():
         prop_fd.write("GIT_DISTANCE={}\n".format(conf.git_distance))
         prop_fd.write("GIT_SHA={}\n".format(conf.git_sha))
 
-    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}"]
+    upload_cmd = ["aws", "s3", "cp",  prop_file, f"s3://{BUCKET}/{conf.job_name}/"]
 
     run_cmd(conf.workspace, upload_cmd)
 
