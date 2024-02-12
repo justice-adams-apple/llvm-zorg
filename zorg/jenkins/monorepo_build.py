@@ -799,6 +799,15 @@ def create_builddirs():
     create_dirs([conf.builddir(), conf.installdir()]);
 
 
+def s3_upload_artifact(folder, artifact):
+    """Upload an artifact to the given folder in the S3 bucket"""
+    upload_cmd = ["aws", "s3", "cp", artifact, f"{BUCKET}/clangci/{folder}/"]
+    environment = os.environ.copy()
+    environment.pop('HTTPS_PROXY', None)
+    environment.pop('http_proxy', None)
+
+    run_cmd(conf.workspace, upload_cmd, env=environment)
+
 def fetch_compiler():
     local_name = "host-compiler.tar.gz"
     url = conf.host_compiler_url + "/" + conf.artifact_url
@@ -840,27 +849,19 @@ def build_upload_artifact():
 
     run_cmd(conf.installdir(), tar)
 
-    upload_cmd = ["aws", "s3", "cp", artifact_name, f"{BUCKET}/clangci/{conf.job_name}/"]
+    s3_upload_artifact(conf.job_name, artifact_name)
 
-    run_cmd(conf.workspace, upload_cmd)
-
-    upload_cmd = ["aws", "s3", "cp",  prop_file, f"{BUCKET}/clangci/{conf.job_name}/"]
-
-    run_cmd(conf.workspace, upload_cmd)
+    s3_upload_artifact(conf.job_name, prop_file)
 
     with open('latest', 'w') as latest:
         latest.write(f"{conf.job_name}/{artifact_name}")
 
-    ln_cmd = ["aws", "s3", "cp", 'latest', f"{BUCKET}/clangci/{conf.job_name}/"]
-
-    run_cmd(conf.workspace, ln_cmd)
+    s3_upload_artifact(conf.job_name, 'latest')
 
     with open(f"g{conf.git_sha}", 'w') as sha:
         sha.write(f"{conf.job_name}/{artifact_name}")
 
-    lng_cmd = ["aws", "s3", "cp", f"g{conf.git_sha}", f"{BUCKET}/clangci/{conf.job_name}/"]
-
-    run_cmd(conf.workspace, lng_cmd)
+    s3_upload_artifact(conf.job_name, f"g{conf.git_sha}")
 
 def build_upload_properties():
     """Create artifact for this build, and upload to server."""
@@ -875,9 +876,7 @@ def build_upload_properties():
         prop_fd.write("GIT_DISTANCE={}\n".format(conf.git_distance))
         prop_fd.write("GIT_SHA={}\n".format(conf.git_sha))
 
-    upload_cmd = ["aws", "s3", "cp",  prop_file, f"{BUCKET}/clangci/{conf.job_name}/"]
-
-    run_cmd(conf.workspace, upload_cmd)
+    s3_upload_artifact(conf.job_name, prop_file)
 
 
 def run_cmd(working_dir, cmd, env=None, sudo=False, err_okay=False):
