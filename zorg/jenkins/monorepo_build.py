@@ -802,11 +802,8 @@ def create_builddirs():
 def s3_upload_artifact(folder, artifact):
     """Upload an artifact to the given folder in the S3 bucket"""
     upload_cmd = ["aws", "s3", "cp", artifact, f"{BUCKET}/clangci/{folder}/"]
-    environment = os.environ.copy()
-    environment.pop('HTTPS_PROXY', None)
-    environment.pop('http_proxy', None)
 
-    run_cmd(conf.workspace, upload_cmd, env=environment)
+    run_cmd(conf.workspace, upload_cmd)
 
 def fetch_compiler():
     local_name = "host-compiler.tar.gz"
