@@ -32,7 +32,7 @@ pipeline {
                         [name: '*/swift-ci-llvm']
                     ], extensions: [
                         [$class: 'CloneOption',
-                        reference: '/Users/Shared/llvm-zorg.git']
+                        reference: '/Users/Shared/llvm-zorg.git'] //ToDo: Is this reference the same?
                     ], userRemoteConfigs: [
                         [url: 'https://github.com/justice-adams-apple/llvm-zorg.git']
                     ]])

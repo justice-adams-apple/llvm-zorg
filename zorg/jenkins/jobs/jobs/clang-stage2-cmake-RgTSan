@@ -40,12 +40,11 @@ pipeline {
             }
         }
         stage('Setup Venv') {
-            // ToDo: Remove environment variable
             environment {
-               PATH="$PATH:/usr/bin:/usr/local/bin" //ToDo: Fix
+               PATH="$PATH:/usr/bin:/usr/local/bin"
             }
             steps {
-               sh '''
+                sh '''
                    # Non-incremental, so always delete.
                    rm -rf clang-build clang-install host-compiler
                    rm -rf venv
@@ -60,15 +59,19 @@ pipeline {
         stage('Fetch Artifact') {
             // ToDo: Remove environment variable
             environment {
-               PATH="$PATH:/usr/bin:/usr/local/bin" //ToDo: Fix
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+               NO_PROXY='169.254.169.254'
             }
             steps {
-               sh """
-                   echo "ARTIFACT=${params.ARTIFACT}"
-                   python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
-                   ls $WORKSPACE/host-compiler/lib/clang/
-                   VERSION=`ls $WORKSPACE/host-compiler/lib/clang/`
-               """
+                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                    sh """
+                        source venv/bin/activate
+                        echo "ARTIFACT=${params.ARTIFACT}"
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
+                        ls $WORKSPACE/host-compiler/lib/clang/
+                        VERSION=`ls $WORKSPACE/host-compiler/lib/clang/`
+                    """
+                }
             }
         }
     }

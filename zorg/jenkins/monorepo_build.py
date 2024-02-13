@@ -11,6 +11,8 @@ import argparse
 import shutil
 import math
 import re
+from pathlib import Path
+
 import requests
 import xml.etree.ElementTree as ET
 from contextlib import contextmanager
@@ -807,9 +809,19 @@ def s3_upload_artifact(folder, artifact):
 
 def fetch_compiler():
     local_name = "host-compiler.tar.gz"
-    url = conf.host_compiler_url + "/" + conf.artifact_url
     header("Fetching Compiler")
-    http_download(url, conf.workspace + "/" + local_name)
+
+    download_cmd = ["aws", "s3", "cp", f"{BUCKET}/clangci/{conf.artifact_url}", local_name]
+    run_cmd(conf.workspace, download_cmd)
+
+    # Determine if the compiler package is actually a pointer to another file stored.
+    # If So, download the file at the pointer
+    if Path(local_name).stat().st_size < 1000:
+        with open(local_name, "r") as pointer:
+            package = pointer.read().strip()
+            download_cmd = ["aws", "s3", "cp", f"{BUCKET}/clangci/{package}", local_name]
+            run_cmd(conf.workspace, download_cmd)
+
     print("Decompressing...")
     if os.path.exists(conf.workspace + "/host-compiler"):
         shutil.rmtree(conf.workspace + "/host-compiler")
