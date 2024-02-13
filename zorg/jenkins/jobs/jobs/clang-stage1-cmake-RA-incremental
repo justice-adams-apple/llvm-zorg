@@ -1,8 +1,14 @@
 pipeline {
-    agent { label 'green-dragon-04' }
-
     parameters {
-        string(name: 'GIT_REVISION', defaultValue: '*/main', description: 'Git revision to build')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
+
+        string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
+    }
+
+    agent {
+        node {
+            label params.LABEL
+        }
     }
 
     stages {
@@ -18,24 +24,36 @@ pipeline {
                         [url: 'https://github.com/llvm/llvm-project.git']
                     ]])
                 }
+                // ToDo: Revert to use non-fork repo
                 dir('llvm-zorg') {
                     checkout([$class: 'GitSCM', branches: [
-                        [name: '*/main']
+                        [name: '*/swift-ci-llvm']
                     ], extensions: [
                         [$class: 'CloneOption',
-                        reference: '/Users/Shared/llvm-zorg.git']
+                        reference: '/Users/Shared/llvm-zorg.git'] //ToDo: Is this reference the same?
                     ], userRemoteConfigs: [
-                        [url: 'https://github.com/llvm/llvm-zorg.git']
+                        [url: 'https://github.com/justice-adams-apple/llvm-zorg.git']
                     ]])
                 }
             }
         }
         stage('Build') {
+            // ToDo: Remove environment variable
+            environment {
+                NO_PROXY='169.254.169.254'
+            }
             steps {
                 timeout(150) {
                     sh '''
                     set -u
                     rm -rf build.properties
+
+                    # install zorg requirements in virtual env
+                    python3 -m venv venv
+                    source ./venv/bin/activate
+
+                    python -m pip install -r ./llvm-zorg/requirements.txt
+                    python -m pip install psutil lit
 
                     cd llvm-project
                     git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -57,7 +75,7 @@ pipeline {
                     # Set a MacOS minimum deployment target
                     export MACOSX_DEPLOYMENT_TARGET=10.14
 
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang"
+                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
 
                     # Removing the local artifact
                     rm -rf clang-*.tar.gz
@@ -71,6 +89,7 @@ pipeline {
                     sh '''
                     set -u
                     export PATH=$PATH:/usr/bin:/usr/local/bin
+                    source ./venv/bin/activate
 
                     rm -rf clang-build/testresults.xunit.xml
 
@@ -81,10 +100,8 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            scanForIssues tool: clang()
-        }
+    //post {
+        // ToDo: Restore the issue scanner
         /* Disabled email notification.
         regression {
             emailext subject: '$DEFAULT_SUBJECT',
@@ -100,5 +117,5 @@ pipeline {
                     body:'$DEFAULT_CONTENT'
         }
         */
-    }
+    //}
 }
