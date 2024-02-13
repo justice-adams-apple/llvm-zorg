@@ -53,8 +53,10 @@ pipeline {
 
                         # install zorg requirements in virtual env
                         python3 -m venv venv
-                        venv/bin/python -m pip install -r ./llvm-zorg/requirements.txt
-                        venv/bin/python -m pip install psutil lit
+                        source ./venv/bin/activate
+
+                        python -m pip install -r ./llvm-zorg/requirements.txt
+                        python -m pip install psutil lit
 
                         cd llvm-project
                         git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -80,7 +82,7 @@ pipeline {
                         export MACOSX_DEPLOYMENT_TARGET=10.14
 
                         rm -rf clang-build clang-install *.tar.gz
-                        venv/bin/python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
                           --assertions --cmake-type=RelWithDebInfo \
                           --projects="clang;clang-tools-extra;compiler-rt" \
                           --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
@@ -95,7 +97,8 @@ pipeline {
                     sh '''
                     set -u
                     export PATH=$PATH:/usr/bin:/usr/local/bin
-                    venv/bin/python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
+                    source ./venv/bin/activate
+                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
                     '''
                 }
                 junit 'clang-build/**/testresults.xunit.xml'
