@@ -18,7 +18,7 @@ pipeline {
             steps {
                 dir('llvm-project') {
                     checkout([$class: 'GitSCM', branches: [
-                        [name: params.GIT_REVISION]
+                        [name: params.GIT_SHA]
                     ], extensions: [
                         [$class: 'CloneOption',
                         reference: '/Users/Shared/llvm-project.git']
@@ -42,7 +42,7 @@ pipeline {
         stage('Setup Venv') {
             // ToDo: Remove environment variable
             environment {
-               PATH="$PATH:/usr/bin:/usr/local/bin" /ToDo: Fix
+               PATH="$PATH:/usr/bin:/usr/local/bin" //ToDo: Fix
             }
             steps {
                sh '''
@@ -60,7 +60,7 @@ pipeline {
         stage('Fetch Artifact') {
             // ToDo: Remove environment variable
             environment {
-               PATH="$PATH:/usr/bin:/usr/local/bin" /ToDo: Fix
+               PATH="$PATH:/usr/bin:/usr/local/bin" //ToDo: Fix
             }
             steps {
                sh """
