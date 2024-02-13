@@ -74,6 +74,33 @@ pipeline {
                 }
             }
         }
+        stage('Build') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+               DYLD_LIBRARY_PATH="$WORKSPACE/host-compiler/lib/"
+            }
+            steps {
+                sh '''
+                   source venv/bin/activate
+                   python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
+                       --cmake-type=RelWithDebInfo \
+                       --projects="clang;clang-tools-extra;compiler-rt" \
+                       --runtimes="libcxx;libcxxabi" \
+                       --cmake-flag='-DLLVM_USE_SANITIZER=Thread' \
+                       --cmake-flag='-DLLVM_ENABLE_LTO=Thin' \
+                       --cmake-flag='-DLLVM_BUILD_RUNTIME=OFF' \
+                       --cmake-flag="-DDYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH" \
+                       --cmake-build-target=LTO --noinstall
+               '''
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                sh "rm -rf clang-build clang-install host-compiler *.tar.gz"
+            }
+        }
     }
 }
 
