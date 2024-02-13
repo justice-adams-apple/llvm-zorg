@@ -1,6 +1,6 @@
 pipeline {
     parameters {
-        string(name: 'LABEL', defaultValue: params.LABEL ?: 'green-dragon-02', description: 'Node label to run on')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
 
         string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
 
@@ -26,6 +26,7 @@ pipeline {
                         [url: 'https://github.com/llvm/llvm-project.git']
                     ]])
                 }
+                // ToDo: Revert to use non-fork repo
                 dir('llvm-zorg') {
                     checkout([$class: 'GitSCM', branches: [
                         [name: '*/swift-ci-llvm']
@@ -39,6 +40,7 @@ pipeline {
             }
         }
         stage('Build') {
+            // ToDo: Remove environment variable
             environment {
                 NO_PROXY='169.254.169.254'
             }
@@ -52,6 +54,7 @@ pipeline {
                         # install zorg requirements in virtual env
                         python3 -m venv venv
                         venv/bin/python -m pip install -r ./llvm-zorg/requirements.txt
+                        venv/bin/python -m pip install psutil lit
 
                         cd llvm-project
                         git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -98,6 +101,7 @@ pipeline {
             }
         }
     }
+    // ToDo: Restore the email functionality and issue scanner
     post {
         success {
             script {
