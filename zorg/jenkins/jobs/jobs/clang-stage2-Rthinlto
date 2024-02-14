@@ -1,11 +1,16 @@
 pipeline {
-    agent { label 'green-dragon-22' }
-
-    options { disableResume() }
-
     parameters {
-        string(name: 'GIT_SHA', defaultValue: '*/main', description: 'Git revision to build')
-        string(name: 'ARTIFACT', defaultValue: 'clang-stage1-RA/latest', description: 'description')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
+
+        string(name: 'GIT_SHA', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git commit to build.')
+
+        string(name: 'ARTIFACT', defaultValue: params.ARTIFACT ?: 'clang-stage1-RA/latest', description: 'Clang artifact to use')
+    }
+
+    agent {
+        node {
+            label params.LABEL
+        }
     }
 
     stages {
@@ -21,24 +26,66 @@ pipeline {
                         [url: 'https://github.com/llvm/llvm-project.git']
                     ]])
                 }
+                // ToDo: Revert to use non-fork repo
                 dir('llvm-zorg') {
                     checkout([$class: 'GitSCM', branches: [
-                        [name: '*/main']
+                        [name: '*/swift-ci-llvm']
                     ], extensions: [
                         [$class: 'CloneOption',
                         reference: '/Users/Shared/llvm-zorg.git']
                     ], userRemoteConfigs: [
-                        [url: 'https://github.com/llvm/llvm-zorg.git']
+                        [url: 'https://github.com/justice-adams-apple/llvm-zorg.git']
                     ]])
                 }
             }
         }
+        stage('Setup Venv') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
+            steps {
+                sh '''
+                   # Non-incremental, so always delete.
+                   rm -rf clang-build clang-install host-compiler *.tar.gz
+                   rm -rf venv
+                   xcrun python3 -m venv venv
+                   set +u
+                   source ./venv/bin/activate
+                   pip install psutil requests urllib3==1.26.15
+                   pip install -r ./llvm-zorg/requirements.txt
+                   pip install psutil lit
+                   set -u
+               '''
+            }
+        }
+        stage('Fetch Artifact') {
+            // ToDo: Remove environment variable
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+               NO_PROXY='169.254.169.254'
+            }
+            steps {
+                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                    sh """
+                        source ./venv/bin/activate
+                        echo "ARTIFACT=${params.ARTIFACT}"
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
+                        ls $WORKSPACE/host-compiler/lib/clang/
+                        VERSION=`ls $WORKSPACE/host-compiler/lib/clang/`
+                    """
+                }
+            }
+        }
         stage('Build') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
             steps {
                 timeout(600) {
                     sh '''
                     set -u
                     rm -rf build.properties
+                    source ./venv/bin/active
 
                     cd llvm-project
                     git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -53,25 +100,23 @@ pipeline {
 
                     echo "ARTIFACT=$JOB_NAME/clang-d$GIT_DISTANCE-g$GIT_SHA-t$BUILD_ID-b$BUILD_NUMBER.tar.gz" > build.properties
 
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
-
-                    rm -rf clang-build clang-install *.tar.gz
-
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
                     python llvm-zorg/zorg/jenkins/monorepo_build.py clang build \
                       --thinlto --projects="clang;compiler-rt" \
-                      --cmake-flag="-DCMAKE_DSYMUTIL=$WORKSPACE/host-compiler/bin/dsymutil"
+                      --cmake-flag="-DCMAKE_DSYMUTIL=$WORKSPACE/host-compiler/bin/dsymutil" \
+                      --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
                     '''
                 }
             }
         }
-
         stage('Test') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
             steps {
                 timeout(240) {
                     sh '''
                     set -u
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
+                    source ./venv/bin/activate
 
                     rm -rf clang-build/testresults.xunit.xml
 
@@ -84,8 +129,12 @@ pipeline {
     }
     post {
         always {
-            scanForIssues tool: clang()
+            script {
+                sh "rm -rf clang-build clang-install host-compiler *.tar.gz"
+            }
         }
+        // ToDo: Restore the email functionality and issue scanner
+        /* Disabled email notification.
         regression {
             emailext subject: '$DEFAULT_SUBJECT',
                     presendScript: '$DEFAULT_PRESEND_SCRIPT',
@@ -99,5 +148,6 @@ pipeline {
                     to: '$DEFAULT_RECIPIENTS',
                     body:'$DEFAULT_CONTENT'
         }
+        */
     }
 }

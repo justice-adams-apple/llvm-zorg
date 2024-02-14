@@ -39,10 +39,30 @@ pipeline {
                 }
             }
         }
+        stage('Setup Venv') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
+            steps {
+                sh '''
+                   # Non-incremental, so always delete just in case.
+                   rm -rf clang-build clang-install host-compiler *.tar.gz
+                   rm -rf venv
+                   xcrun python3 -m venv venv
+                   set +u
+                   source ./venv/bin/activate
+                   python -m pip install -r ./llvm-zorg/requirements.txt
+                   python -m pip install psutil lit
+                   set -u
+               '''
+            }
+        }
         stage('Build') {
             // ToDo: Remove environment variable
             environment {
                 NO_PROXY='169.254.169.254'
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+                MACOSX_DEPLOYMENT_TARGET="13.6"
             }
             steps {
                 timeout(90) {
@@ -51,12 +71,7 @@ pipeline {
                         set -u
                         rm -rf build.properties
 
-                        # install zorg requirements in virtual env
-                        python3 -m venv venv
                         source ./venv/bin/activate
-
-                        python -m pip install -r ./llvm-zorg/requirements.txt
-                        python -m pip install psutil lit
 
                         cd llvm-project
                         git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -76,11 +91,6 @@ pipeline {
                         echo "GIT_SHA=$GIT_SHA" >> build.properties
                         echo "ARTIFACT=$JOB_NAME/clang-d$GIT_DISTANCE-g$GIT_SHA-t$BUILD_ID-b$BUILD_NUMBER.tar.gz" >> build.properties
 
-                        export PATH=$PATH:/usr/bin:/usr/local/bin
-
-                        # Set a MacOS minimum deployment target
-                        export MACOSX_DEPLOYMENT_TARGET=13.6
-
                         rm -rf clang-build clang-install *.tar.gz
                         python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
                           --assertions --cmake-type=RelWithDebInfo \
@@ -92,11 +102,13 @@ pipeline {
             }
         }
         stage('Test') {
+            environment {
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
             steps {
                 timeout(90) {
                     sh '''
                     set -u
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
                     source ./venv/bin/activate
                     python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
                     '''
@@ -107,6 +119,11 @@ pipeline {
     }
     // ToDo: Restore the email functionality and issue scanner
     post {
+        always {
+            script {
+                sh "rm -rf clang-build clang-install host-compiler"
+            }
+        }
         success {
             script {
                 if (!params.SKIP_TRIGGER) {

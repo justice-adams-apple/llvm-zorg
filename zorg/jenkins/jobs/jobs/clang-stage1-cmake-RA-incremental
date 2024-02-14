@@ -37,10 +37,28 @@ pipeline {
                 }
             }
         }
+        stage('Setup Venv') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
+            steps {
+                sh '''
+                   rm -rf venv clang-*.tar.gz
+                   xcrun python3 -m venv venv
+                   set +u
+                   source ./venv/bin/activate
+                   python -m pip install -r ./llvm-zorg/requirements.txt
+                   python -m pip install psutil lit
+                   set -u
+               '''
+            }
+        }
         stage('Build') {
             // ToDo: Remove environment variable
             environment {
                 NO_PROXY='169.254.169.254'
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+                MACOSX_DEPLOYMENT_TARGET="13.6"
             }
             steps {
                 withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
@@ -49,12 +67,7 @@ pipeline {
                         set -u
                         rm -rf build.properties
 
-                        # install zorg requirements in virtual env
-                        python3 -m venv venv
                         source ./venv/bin/activate
-
-                        python -m pip install -r ./llvm-zorg/requirements.txt
-                        python -m pip install psutil lit
 
                         cd llvm-project
                         git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -71,26 +84,20 @@ pipeline {
 
                         cd -
 
-                        export PATH=$PATH:/usr/bin:/usr/local/bin
-
-                        # Set a MacOS minimum deployment target
-                        export MACOSX_DEPLOYMENT_TARGET=13.6
-
                         python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
-
-                        # Removing the local artifact
-                        rm -rf clang-*.tar.gz
                         '''
                     }
                 }
             }
         }
         stage('Test') {
+            environment {
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
             steps {
                 timeout(150) {
                     sh '''
                     set -u
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
                     source ./venv/bin/activate
 
                     rm -rf clang-build/testresults.xunit.xml
@@ -102,7 +109,12 @@ pipeline {
             }
         }
     }
-    //post {
+    post {
+        always {
+            script {
+                sh "rm -rf clang-*.tar.gz"
+            }
+        }
         // ToDo: Restore the issue scanner
         /* Disabled email notification.
         regression {
@@ -119,5 +131,5 @@ pipeline {
                     body:'$DEFAULT_CONTENT'
         }
         */
-    //}
+    }
 }

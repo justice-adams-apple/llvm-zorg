@@ -46,12 +46,14 @@ pipeline {
             steps {
                 sh '''
                    # Non-incremental, so always delete.
-                   rm -rf clang-build clang-install host-compiler
+                   rm -rf clang-build clang-install host-compiler *.tar.gz
                    rm -rf venv
                    xcrun python3 -m venv venv
                    set +u
-                   source venv/bin/activate
+                   source ./venv/bin/activate
                    pip install psutil requests urllib3==1.26.15
+                   pip install -r ./llvm-zorg/requirements.txt
+                   pip install psutil lit
                    set -u
                '''
             }
@@ -65,7 +67,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
                     sh """
-                        source venv/bin/activate
+                        source ./venv/bin/activate
                         echo "ARTIFACT=${params.ARTIFACT}"
                         python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
                         ls $WORKSPACE/host-compiler/lib/clang/
@@ -81,7 +83,7 @@ pipeline {
             }
             steps {
                 sh '''
-                   source venv/bin/activate
+                   source ./venv/bin/activate
                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
                        --cmake-type=RelWithDebInfo \
                        --projects="clang;clang-tools-extra;compiler-rt" \
