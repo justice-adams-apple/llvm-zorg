@@ -26,8 +26,8 @@ private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
     withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
         propfile = basename(last_good_properties_url)
         sh """
-        rm -f ${propfile}Relay - Clang Stage 2: cmake, R -g + <Sanitizers>
-        aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
+          rm -f ${propfile}
+          aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
         """
     }
 
@@ -71,10 +71,13 @@ def pipeline(job_pattern,
               xcrun python3 -m venv venv
               set +u
               source ./venv/bin/activate
-              pip install awscli
+              pip install awscli==1.32.41
               set -u
             """
-            withEnv(["PATH=$PATH:/usr/bin:/usr/local/bin:$WORKSPACE/venv/bin"]) {
+            withEnv([
+                "PATH=$PATH:/usr/bin:/usr/local/bin:$WORKSPACE/venv/bin",
+                "NO_PROXY=169.254.169.254" //ToDo: Remove this env varible
+            ]) {
                 relay_steps job_pattern, artifact_url, last_good_properties_url
             }
         }
