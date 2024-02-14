@@ -22,13 +22,17 @@ private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
     // "last_good_build.properties" file that contains a reference to the
     // compiler artifact that should be used for this run and which llvm
     // revision it is based on.
-    propfile = basename(last_good_properties_url)
-    sh """
-rm -f ${propfile}
-curl -fksSO "${last_good_properties_url}"
-"""
+    // Ensure you have the AWS CLI on path before triggering the relay
+    withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+        propfile = basename(last_good_properties_url)
+        sh """
+        rm -f ${propfile}
+        aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
+        """
+    }
+
     def props = readProperties file: propfile
-    def artifact = "http://green-dragon-21.local/artifacts/${props.ARTIFACT}"
+    def artifact = props.ARTIFACT
     currentBuild.setDisplayName("${props.GIT_DISTANCE}-${props.GIT_SHA}")
 
     // Trigger all jobs with names matching the `job_pattern` regex.
@@ -56,11 +60,14 @@ curl -fksSO "${last_good_properties_url}"
 }
 
 def pipeline(job_pattern,
-        artifact_url='http://green-dragon-21.local/artifacts/',
-        last_good_properties_url='http://green-dragon-21.local/artifacts/clang-stage1-RA/last_good_build.properties') {
-    node('master') {
+        artifact_url='clang-stage1-RA/latest',
+        last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
+    //ToDo: Do we want to set up trigger specific nodes for this
+    node('built-in') {
         stage('main') {
-            relay_steps job_pattern, artifact_url, last_good_properties_url
+            withEnv(["PATH=$PATH:/usr/bin:/usr/local/bin"]) {
+                relay_steps job_pattern, artifact_url, last_good_properties_url
+            }
         }
     }
 }
