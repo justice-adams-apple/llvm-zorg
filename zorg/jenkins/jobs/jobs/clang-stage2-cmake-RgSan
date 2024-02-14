@@ -78,7 +78,7 @@ pipeline {
         stage('Build') {
             environment {
                PATH="$PATH:/usr/bin:/usr/local/bin"
-               HOST_INC_DIR="$WORKSPACE/host-compiler/bin/\.\./include"
+               HOST_INC_DIR="$WORKSPACE/host-compiler/bin/../include"
             }
             steps {
                 sh '''
@@ -97,6 +97,7 @@ pipeline {
         stage('Test') {
             environment {
                 PATH="$PATH:/usr/bin:/usr/local/bin"
+                ASAN_SYMBOLIZER_PATH="$WORKSPACE/host-compiler/bin/llvm-symbolizer"
             }
             steps {
                 sh '''
