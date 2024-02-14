@@ -74,7 +74,7 @@ pipeline {
                         export PATH=$PATH:/usr/bin:/usr/local/bin
 
                         # Set a MacOS minimum deployment target
-                        export MACOSX_DEPLOYMENT_TARGET=10.14
+                        export MACOSX_DEPLOYMENT_TARGET=13.6
 
                         python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
 
