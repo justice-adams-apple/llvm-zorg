@@ -26,7 +26,7 @@ private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
     withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
         propfile = basename(last_good_properties_url)
         sh """
-        rm -f ${propfile}
+        rm -f ${propfile}Relay - Clang Stage 2: cmake, R -g + <Sanitizers>
         aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
         """
     }
@@ -63,7 +63,7 @@ def pipeline(job_pattern,
         artifact_url='clang-stage1-RA/latest',
         last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
-    node('built-in') {
+    node('LLVM') {
         stage('main') {
             withEnv(["PATH=$PATH:/usr/bin:/usr/local/bin"]) {
                 relay_steps job_pattern, artifact_url, last_good_properties_url
