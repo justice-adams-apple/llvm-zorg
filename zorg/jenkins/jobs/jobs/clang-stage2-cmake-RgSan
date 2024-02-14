@@ -99,7 +99,9 @@ pipeline {
                 set -u
                 export PATH=$PATH:/usr/bin:/usr/local/bin
                 source ./venv/bin/activate
-                python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
+                python llvm-zorg/zorg/jenkins/monorepo_build.py cmake test \
+                    --cmake-test-target=check-llvm \
+                    --cmake-test-target=check-clang
                 '''
                 junit 'clang-build/**/testresults.xunit.xml'
             }
