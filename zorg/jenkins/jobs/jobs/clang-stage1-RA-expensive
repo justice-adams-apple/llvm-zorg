@@ -1,4 +1,8 @@
 pipeline {
+    options {
+        disableConcurrentBuilds()
+    }
+
     parameters {
         string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
 
