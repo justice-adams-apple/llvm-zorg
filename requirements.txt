@@ -26,3 +26,6 @@ cryptography==3.4.5
 cffi==1.14.5
 Twisted==22.4.0
 treq==22.1.0
+psutil==5.9.8
+lit==17.0.6
+awscli==1.32.41

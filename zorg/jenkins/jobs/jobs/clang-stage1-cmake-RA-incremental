@@ -48,7 +48,6 @@ pipeline {
                    set +u
                    source ./venv/bin/activate
                    python -m pip install -r ./llvm-zorg/requirements.txt
-                   python -m pip install psutil lit
                    set -u
                '''
             }

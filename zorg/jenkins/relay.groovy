@@ -65,7 +65,16 @@ def pipeline(job_pattern,
     //ToDo: Do we want to set up trigger specific nodes for this
     node('LLVM') {
         stage('main') {
-            withEnv(["PATH=$PATH:/usr/bin:/usr/local/bin"]) {
+            // Download aws CLI used to gather artifacts
+            sh """
+              rm -rf venv
+              xcrun python3 -m venv venv
+              set +u
+              source ./venv/bin/activate
+              pip install awscli
+              set -u
+            """
+            withEnv(["PATH=$PATH:/usr/bin:/usr/local/bin:$WORKSPACE/venv/bin"]) {
                 relay_steps job_pattern, artifact_url, last_good_properties_url
             }
         }
