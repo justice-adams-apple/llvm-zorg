@@ -43,43 +43,45 @@ pipeline {
                 NO_PROXY='169.254.169.254'
             }
             steps {
-                timeout(150) {
-                    sh '''
-                    set -u
-                    rm -rf build.properties
+                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                    timeout(150) {
+                        sh '''
+                        set -u
+                        rm -rf build.properties
 
-                    # install zorg requirements in virtual env
-                    python3 -m venv venv
-                    source ./venv/bin/activate
+                        # install zorg requirements in virtual env
+                        python3 -m venv venv
+                        source ./venv/bin/activate
 
-                    python -m pip install -r ./llvm-zorg/requirements.txt
-                    python -m pip install psutil lit
+                        python -m pip install -r ./llvm-zorg/requirements.txt
+                        python -m pip install psutil lit
 
-                    cd llvm-project
-                    git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
+                        cd llvm-project
+                        git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
 
-                    git_desc=$(git describe --match "first_commit")
+                        git_desc=$(git describe --match "first_commit")
 
-                    export GIT_DISTANCE=$(echo ${git_desc} | cut -f 2 -d "-")
+                        export GIT_DISTANCE=$(echo ${git_desc} | cut -f 2 -d "-")
 
-                    sha=$(echo ${git_desc} | cut -f 3 -d "-")
-                    export GIT_SHA=${sha:1}
+                        sha=$(echo ${git_desc} | cut -f 3 -d "-")
+                        export GIT_SHA=${sha:1}
 
-                    # Also save the LLVM_REV until LNT server is taught about GIT
-                    export LLVM_REV=$(git show -q | grep "llvm-svn:" | cut -f2 -d":" | tr -d " ")
+                        # Also save the LLVM_REV until LNT server is taught about GIT
+                        export LLVM_REV=$(git show -q | grep "llvm-svn:" | cut -f2 -d":" | tr -d " ")
 
-                    cd -
+                        cd -
 
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
+                        export PATH=$PATH:/usr/bin:/usr/local/bin
 
-                    # Set a MacOS minimum deployment target
-                    export MACOSX_DEPLOYMENT_TARGET=10.14
+                        # Set a MacOS minimum deployment target
+                        export MACOSX_DEPLOYMENT_TARGET=10.14
 
-                    python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build --assertions --projects="clang" --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
 
-                    # Removing the local artifact
-                    rm -rf clang-*.tar.gz
-                    '''
+                        # Removing the local artifact
+                        rm -rf clang-*.tar.gz
+                        '''
+                    }
                 }
             }
         }
