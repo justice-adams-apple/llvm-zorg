@@ -88,7 +88,7 @@ pipeline {
                     sh '''
                     set -u
                     rm -rf build.properties
-                    source ./venv/bin/active
+                    source ./venv/bin/activate
 
                     cd llvm-project
                     git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
