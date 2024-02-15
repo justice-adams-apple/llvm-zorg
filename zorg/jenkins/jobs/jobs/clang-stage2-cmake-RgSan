@@ -85,17 +85,19 @@ pipeline {
                HOST_INC_DIR="$WORKSPACE/host-compiler/bin/../include"
             }
             steps {
-                sh '''
-                   source ./venv/bin/activate
-                   python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
-                       --cmake-type=RelWithDebInfo \
-                       --projects="clang;clang-tools-extra" \
-                       --runtimes="libcxx;libcxxabi;libunwind" \
-                       --cmake-flag='-DLLVM_USE_SANITIZER=Address;Undefined' \
-                       --cmake-flag="-DLIBCXX_INCLUDE_TESTS=OFF" \
-                       --timeout=1800 \
-                       --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
-               '''
+                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                    sh '''
+                       source ./venv/bin/activate
+                       python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
+                           --cmake-type=RelWithDebInfo \
+                           --projects="clang;clang-tools-extra" \
+                           --runtimes="libcxx;libcxxabi;libunwind" \
+                           --cmake-flag='-DLLVM_USE_SANITIZER=Address;Undefined' \
+                           --cmake-flag="-DLIBCXX_INCLUDE_TESTS=OFF" \
+                           --timeout=1800 \
+                           --cmake-flag="-DPython3_EXECUTABLE=$(which python)"
+                   '''
+                }
             }
         }
         stage('Test') {
