@@ -63,15 +63,15 @@ def pipeline(job_pattern,
         artifact_url='clang-stage1-RA/latest',
         last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
-    node('LLVM') {
+    node('trigger') {
         stage('main') {
             // Download aws CLI used to gather artifacts
             sh """
               rm -rf venv
-              xcrun python3 -m venv venv
+              python3 -m venv venv
               set +u
               source ./venv/bin/activate
-              pip install awscli==1.32.41
+              pip install awscli
               set -u
             """
             withEnv([

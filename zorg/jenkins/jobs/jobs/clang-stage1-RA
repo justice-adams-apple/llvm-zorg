@@ -130,24 +130,8 @@ pipeline {
         success {
             script {
                 if (!params.SKIP_TRIGGER) {
-                    props = readProperties file: 'build.properties'
-
-                    job_params = [
-                        [$class: 'StringParameterValue',
-                         name: 'ARTIFACT',
-                         value: props.ARTIFACT],
-                        [$class: 'StringParameterValue',
-                         name: 'GIT_SHA',
-                         value: props.GIT_SHA],
-                        [$class: 'StringParameterValue',
-                         name: 'GIT_DISTANCE',
-                         value: props.GIT_DISTANCE],
-                    ]
-
                     // Trigger Stage 2 Jobs
-                    build job: 'clang-stage2-Rthinlto', wait: false, parameters: job_params
-                    build job: 'clang-stage2-cmake-RgTSan', wait: false, parameters: job_params
-                    build job: 'clang-stage2-cmake-RgSan', wait: false, parameters: job_params
+                    build job: 'clang-stage2-cmake-RgSan_relay', wait: false
 
                      // ToDo: Enable
                     //build job: 'phase2_modules_relay', wait: false
@@ -160,24 +144,8 @@ pipeline {
         unstable {
             script {
                 if (!params.SKIP_TRIGGER) {
-                    props = readProperties file: 'build.properties'
-
-                    job_params = [
-                        [$class: 'StringParameterValue',
-                         name: 'ARTIFACT',
-                         value: props.ARTIFACT],
-                        [$class: 'StringParameterValue',
-                         name: 'GIT_SHA',
-                         value: props.GIT_SHA],
-                        [$class: 'StringParameterValue',
-                         name: 'GIT_DISTANCE',
-                         value: props.GIT_DISTANCE],
-                    ]
-
                     // Trigger Stage 2 Jobs
-                    build job: 'clang-stage2-Rthinlto', wait: false, parameters: job_params
-                    build job: 'clang-stage2-cmake-RgTSan', wait: false, parameters: job_params
-                    build job: 'clang-stage2-cmake-RgSan', wait: false, parameters: job_params
+                    build job: 'clang-stage2-cmake-RgSan_relay', wait: false
 
                      // ToDo: Enable
                     //build job: 'phase2_modules_relay', wait: false
