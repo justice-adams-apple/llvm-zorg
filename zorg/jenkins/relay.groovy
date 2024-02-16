@@ -63,7 +63,7 @@ def pipeline(job_pattern,
         artifact_url='clang-stage1-RA/latest',
         last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
-    node('trigger') {
+    node('LLVM') {
         stage('main') {
             // Download aws CLI used to gather artifacts
             sh """
@@ -76,7 +76,7 @@ def pipeline(job_pattern,
             """
             withEnv([
                 "PATH=$PATH:/usr/bin:/usr/local/bin:$WORKSPACE/venv/bin",
-                "NO_PROXY=169.254.169.254" //ToDo: Remove this env varible
+                "NO_PROXY=169.254.169.254" //ToDo: Remove this env variable
             ]) {
                 relay_steps job_pattern, artifact_url, last_good_properties_url
             }
