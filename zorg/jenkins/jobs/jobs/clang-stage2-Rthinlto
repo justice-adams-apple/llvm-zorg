@@ -84,7 +84,7 @@ pipeline {
                PATH="$PATH:/usr/bin:/usr/local/bin"
             }
             steps {
-                timeout(600) {
+                timeout(720) {
                     withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
                         sh '''
                         set -u
