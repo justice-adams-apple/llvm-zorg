@@ -75,7 +75,7 @@ def pipeline(job_pattern,
               set -u
             """
             withEnv([
-                "PATH=$PATH:/usr/bin:/usr/local/bin:$WORKSPACE/venv/bin",
+                "PATH=$PATH:$WORKSPACE/venv/bin:/usr/bin:/usr/local/bin",
                 "NO_PROXY=169.254.169.254" //ToDo: Remove this env variable
             ]) {
                 relay_steps job_pattern, artifact_url, last_good_properties_url
