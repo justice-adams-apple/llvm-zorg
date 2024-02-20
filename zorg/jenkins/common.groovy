@@ -84,15 +84,17 @@ def task_pipeline(label, body) {
     node(label) {
         try {
             stage('main') {
-                environment {
-                   PATH="$PATH:/usr/bin:/usr/local/bin"
-                }
                 dir('config') {
                     // ToDo: Revert to use non-fork repo
                     git url: 'https://github.com/justice-adams-apple/llvm-zorg.git', branch: 'swift-ci-llvm', poll: false
                 }
-                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
-                    body()
+                withEnv([
+                    "PATH=$PATH:$WORKSPACE/venv/bin:/usr/bin:/usr/local/bin",
+                    "NO_PROXY=169.254.169.254" //ToDo: Remove this env variable
+                ]) {
+                    withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                        body()
+                    }
                 }
             }
         } catch(hudson.AbortException e) {
