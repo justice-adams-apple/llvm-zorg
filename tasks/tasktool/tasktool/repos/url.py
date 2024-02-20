@@ -1,8 +1,10 @@
+import os
+from pathlib import Path
 from pipes import quote
-import sys
-import tasktool.utils as utils
-import logging
 
+import tasktool.utils as utils
+
+BUCKET = os.environ.get("S3_BUCKET")
 
 def verify(config):
     if config.get('url') is None:
@@ -15,8 +17,23 @@ def resolve_latest(config):
 
 def get_artifact(config, dest_dir):
     url = config['url']
-    untar_cmd = "cd %s ; curl -s %s | tar -x" % (quote(dest_dir), quote(url))
+
     utils.check_call(['mkdir', '-p', dest_dir])
+
+    download_cmd = ["aws", "s3", "cp", f"{BUCKET}/clangci/{url}", 'artifact']
+    utils.check_call(download_cmd, cwd=dest_dir)
+
+    local_name = 'artifact'
+
+    # Determine if the artifact is actually a pointer to another file stored.
+    # If So, download the file at the pointer
+    if Path(local_name).stat().st_size < 1000:
+        with open(local_name, "r") as pointer:
+            package = pointer.read().strip()
+            download_cmd = ["aws", "s3", "cp", f"{BUCKET}/clangci/{package}", local_name]
+            utils.check_call(download_cmd, cwd=dest_dir)
+
+    untar_cmd = ["tar", "-x", local_name]
     utils.check_call(untar_cmd, shell=True)
 
 
