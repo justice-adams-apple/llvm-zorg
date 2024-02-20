@@ -5,6 +5,9 @@ common.testsuite_pipeline(label: 'LLVM') {
         sh """
 LNT_FLAGS+=" -C config/tasks/cmake/caches/target-arm64-iphoneos.cmake"
 LNT_FLAGS+=" -C config/tasks/cmake/caches/opt-O0-g.cmake"
+rm -rf venv
+xcrun python3 -m venv venv
+source ./venv/bin/activate
 config/tasks/task jenkinsrun config/tasks/lnt-ctmark.sh -a compiler="${params.ARTIFACT}" -D LNT_FLAGS="\${LNT_FLAGS}"
         """
     }
