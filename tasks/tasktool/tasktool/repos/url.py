@@ -27,14 +27,14 @@ def get_artifact(config, dest_dir):
 
     # Determine if the artifact is actually a pointer to another file stored.
     # If So, download the file at the pointer
-    if Path(local_name).stat().st_size < 1000:
-        with open(local_name, "r") as pointer:
+    if Path(dest_dir, local_name).stat().st_size < 1000:
+        with Path(dest_dir, local_name).open() as pointer:
             package = pointer.read().strip()
             download_cmd = ["aws", "s3", "cp", f"{BUCKET}/clangci/{package}", local_name]
             utils.check_call(download_cmd, cwd=dest_dir)
 
-    untar_cmd = ["tar", "-x", local_name]
-    utils.check_call(untar_cmd, shell=True)
+    untar_cmd = ["tar", "zxf", local_name]
+    utils.check_call(untar_cmd, shell=True, cwd=dest_dir)
 
 
 def repro_arg(config, dest_dir):
