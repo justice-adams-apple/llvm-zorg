@@ -85,7 +85,8 @@ def task_pipeline(label, body) {
         try {
             stage('main') {
                 dir('config') {
-                    git url: 'https://github.com/llvm/llvm-zorg.git', branch: 'main', poll: false
+                    // ToDo: Revert to use non-fork repo
+                    git url: 'https://github.com/justice-adams-apple/llvm-zorg.git', branch: 'swift-ci-llvm', poll: false
                 }
                 body()
             }
@@ -98,7 +99,8 @@ def task_pipeline(label, body) {
             throw e
         } finally {
             stage('post') {
-                post_build()
+                //post_build()
+                echo "post" //ToDo: Revert to post
             }
         }
     }
