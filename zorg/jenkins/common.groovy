@@ -84,11 +84,16 @@ def task_pipeline(label, body) {
     node(label) {
         try {
             stage('main') {
+                environment {
+                   PATH="$PATH:/usr/bin:/usr/local/bin"
+                }
                 dir('config') {
                     // ToDo: Revert to use non-fork repo
                     git url: 'https://github.com/justice-adams-apple/llvm-zorg.git', branch: 'swift-ci-llvm', poll: false
                 }
-                body()
+                withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+                    body()
+                }
             }
         } catch(hudson.AbortException e) {
             // No need to print the exception if something fails inside a 'sh'
