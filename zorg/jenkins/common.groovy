@@ -41,7 +41,7 @@ private def clone_llvm_project(name, sha) {
 
 private def post_build() {
     // Analyze build log.
-    def base_url = 'http://labmaster2:8080/green'
+    def base_url = 'https://ci.swift.org/view/LLVM/'
     def build_url = currentBuild.getRawBuild().getUrl()
     def log_url = "${base_url}/${build_url}consoleText"
     def ret = sh \
