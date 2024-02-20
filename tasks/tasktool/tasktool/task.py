@@ -1,12 +1,16 @@
 '''
 Task runner.
 '''
+
+import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 import argparse
-import copy
 import json
 import os
 import re
-import subprocess
 import sys
 import tempfile
 import utils
@@ -221,10 +225,6 @@ def _make_buildconfig(argconfig):
         if name not in artifact_parameters:
             sys.stderr.write("Warning: task does not have input '%s'\n" % name)
             artifact_parameters[name] = name
-        if '://' not in val:
-            # TODO: Support local dirs...
-            sys.stderr.write("Expected URL for input '%s'\n" % name)
-            sys.exit(1)
         repo_overrides[name] = {'type': 'url', 'url': val}
     for i in argconfig.refs:
         name, eq, val = i.partition('=')
