@@ -41,7 +41,7 @@ private def clone_llvm_project(name, sha) {
 
 private def post_build() {
     // Analyze build log.
-    def log_url = "\$BUILD_URL/consoleText"
+    def log_url = "${env.BUILD_URL}/consoleText"
     def ret = sh \
         script: "curl '${log_url}' -s | config/zorg/jenkins/inspect_log.py > log_summary.html",
         returnStatus: true
