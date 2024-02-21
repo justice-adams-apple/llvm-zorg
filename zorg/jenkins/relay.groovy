@@ -1,23 +1,9 @@
 #!/usr/bin/env groovy
-@NonCPS
-private def get_matching_jobs(pattern) {
-    def jobs = []
-    for (job in Jenkins.getInstance().getAllItems(Job)) {
-        def jobname = job.getName()
-        def m = jobname =~ pattern
-        if (m) {
-            def shortname = m[0][1]
-            jobs.push([shortname, jobname])
-        }
-    }
-    return jobs
-}
-
 private def basename(path) {
     return path.drop(path.lastIndexOf('/') + 1)
 }
 
-private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
+private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     // The upstream jobs triggering the relay produce a
     // "last_good_build.properties" file that contains a reference to the
     // compiler artifact that should be used for this run and which llvm
@@ -35,8 +21,7 @@ private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
     def artifact = props.ARTIFACT
     currentBuild.setDisplayName("${props.GIT_DISTANCE}-${props.GIT_SHA}")
 
-    // Trigger all jobs with names matching the `job_pattern` regex.
-    def joblist = get_matching_jobs(job_pattern)
+    // Trigger all jobs within the provided list
     def parallel_builds = [:]
     for (j in joblist) {
         def shortname = j[0]
@@ -59,7 +44,7 @@ private def relay_steps(job_pattern, artifact_url, last_good_properties_url) {
     parallel parallel_builds
 }
 
-def pipeline(job_pattern,
+def pipeline(joblist,
         artifact_url='clang-stage1-RA/latest',
         last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
@@ -78,18 +63,18 @@ def pipeline(job_pattern,
                 "PATH=$PATH:$WORKSPACE/venv/bin:/usr/bin:/usr/local/bin",
                 "NO_PROXY=169.254.169.254" //ToDo: Remove this env variable
             ]) {
-                relay_steps job_pattern, artifact_url, last_good_properties_url
+                relay_steps joblist, artifact_url, last_good_properties_url
             }
         }
     }
 }
 
-def lldb_pipeline(job_pattern,
+def lldb_pipeline(joblist,
         artifact_url='http://green-dragon-21.local/artifacts/',
         last_good_properties_url='http://green-dragon-21.local/artifacts/lldb-cmake/last_good_build.properties') {
     node('master') {
         stage('main') {
-            relay_steps job_pattern, artifact_url, last_good_properties_url
+            relay_steps joblist, artifact_url, last_good_properties_url
         }
     }
 }

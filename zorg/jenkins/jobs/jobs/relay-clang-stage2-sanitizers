@@ -1,3 +1,9 @@
 #!/usr/bin/env groovy
 def relay = evaluate readTrusted('zorg/jenkins/relay.groovy')
-relay.pipeline "clang-stage2-cmake-(.*)San\$"
+
+jobs = [
+    "clang-stage2-cmake-RgSan",
+    "clang-stage2-cmake-RgTSan"
+]
+
+relay.pipeline jobs
