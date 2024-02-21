@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Search a given log file for patterns defined in patterns.py and produce a
 # HTML snippet for the matching lines.
