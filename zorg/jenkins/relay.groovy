@@ -9,13 +9,19 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     // compiler artifact that should be used for this run and which llvm
     // revision it is based on.
     // Ensure you have the AWS CLI on path before triggering the relay
-    withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
-        propfile = basename(last_good_properties_url)
-        sh """
-          rm -f ${propfile}
-          aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
-        """
-    }
+     withEnv([
+         "PATH=$PATH:$WORKSPACE/venv/bin:/usr/bin:/usr/local/bin",
+         "NO_PROXY='169.254.169.254'" //ToDo: Remove this env variable
+     ]) {
+        withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+            propfile = basename(last_good_properties_url)
+            sh """
+              set
+              rm -f ${propfile}
+              aws s3 cp $S3_BUCKET/clangci/${last_good_properties_url} ${propfile}
+            """
+        }
+     }
 
     def props = readProperties file: propfile
     def artifact = props.ARTIFACT
@@ -59,12 +65,7 @@ def pipeline(joblist,
               pip install awscli
               set -u
             """
-            withEnv([
-                "PATH=$PATH:$WORKSPACE/venv/bin:/usr/bin:/usr/local/bin",
-                "NO_PROXY=169.254.169.254" //ToDo: Remove this env variable
-            ]) {
-                relay_steps joblist, artifact_url, last_good_properties_url
-            }
+            relay_steps joblist, artifact_url, last_good_properties_url
         }
     }
 }
