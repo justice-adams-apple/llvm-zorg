@@ -41,9 +41,7 @@ private def clone_llvm_project(name, sha) {
 
 private def post_build() {
     // Analyze build log.
-    def base_url = 'https://ci.swift.org/view/LLVM/'
-    def build_url = currentBuild.getRawBuild().getUrl()
-    def log_url = "${base_url}/${build_url}consoleText"
+    def log_url = "\$BUILD_URL/consoleText"
     def ret = sh \
         script: "curl '${log_url}' -s | config/zorg/jenkins/inspect_log.py > log_summary.html",
         returnStatus: true
@@ -65,6 +63,8 @@ private def post_build() {
         currentBuild.currentResult == 'FAILURE') {
         def email_template = readTrusted 'zorg/jenkins/email.template'
         def body = render_template(email_template, log_summary)
+        // ToDo: Restore the email functionality and issue scanner
+        /* Disabled email notification.
         emailext subject: '$DEFAULT_SUBJECT',
             presendScript: '$DEFAULT_PRESEND_SCRIPT',
             postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
@@ -76,6 +76,7 @@ private def post_build() {
             replyTo: '$DEFAULT_REPLYTO',
             to: '$DEFAULT_RECIPIENTS',
             body: body
+        */
     }
     // TODO: Notify IRC.
 }
@@ -106,8 +107,7 @@ def task_pipeline(label, body) {
             throw e
         } finally {
             stage('post') {
-                //post_build()
-                echo "post" //ToDo: Revert to post
+                post_build()
             }
         }
     }
