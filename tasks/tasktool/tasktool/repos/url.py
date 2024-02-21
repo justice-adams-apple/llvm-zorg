@@ -34,7 +34,7 @@ def get_artifact(config, dest_dir):
             utils.check_call(download_cmd, cwd=dest_dir)
 
     untar_cmd = ["tar", "zxf", local_name]
-    utils.check_call(untar_cmd, shell=True, cwd=dest_dir)
+    utils.check_call(untar_cmd, cwd=dest_dir)
 
 
 def repro_arg(config, dest_dir):
