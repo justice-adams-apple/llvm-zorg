@@ -24,9 +24,8 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     // Trigger all jobs within the provided list
     def parallel_builds = [:]
     for (j in joblist) {
-        def shortname = j[0]
-        def jobname = j[1]
-        parallel_builds[shortname] = {
+        def jobname = j
+        parallel_builds[jobname] = {
             def job_params = [
                 [$class: 'StringParameterValue',
                  name: 'ARTIFACT',
