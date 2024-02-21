@@ -1,8 +1,14 @@
 pipeline {
-    agent { label 'green-dragon-08' }
-
     parameters {
-        string(name: 'GIT_REVISION', defaultValue: '*/main', description: 'Git revision to build')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
+
+        string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
+    }
+
+    agent {
+        node {
+            label params.LABEL
+        }
     }
 
     stages {
@@ -11,16 +17,48 @@ pipeline {
                 dir('llvm-project') {
                     checkout([$class: 'GitSCM', branches: [[name: params.GIT_REVISION]], userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]])
                 }
+                // ToDo: Revert to use non-fork repo
                 dir('llvm-zorg') {
-                    checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-zorg.git']]])
+                    checkout([$class: 'GitSCM', branches: [
+                        [name: '*/swift-ci-llvm']
+                    ], extensions: [
+                        [$class: 'CloneOption',
+                        reference: '/Users/Shared/llvm-zorg.git'] //ToDo: Is this reference the same?
+                    ], userRemoteConfigs: [
+                        [url: 'https://github.com/justice-adams-apple/llvm-zorg.git']
+                    ]])
                 }
             }
         }
+        stage('Setup Venv') {
+            environment {
+               PATH="$PATH:/usr/bin:/usr/local/bin"
+            }
+            steps {
+                sh '''
+                   # Non-incremental, so always delete just in case.
+                   rm -rf clang-build clang-install host-compiler *.tar.gz
+                   rm -rf venv
+                   xcrun python3 -m venv venv
+                   set +u
+                   source ./venv/bin/activate
+                   python -m pip install -r ./llvm-zorg/requirements.txt
+                   set -u
+               '''
+            }
+        }
         stage('Build') {
+            environment {
+                NO_PROXY='169.254.169.254'
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+                MACOSX_DEPLOYMENT_TARGET="10.14"
+            }
             steps {
                 timeout(90) {
                     sh '''
                     set -u
+
+                    source ./venv/bin/activate
 
                     cd llvm-project
                     git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
@@ -33,12 +71,6 @@ pipeline {
 
                     cd -
 
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
-
-                    # Set a MacOS minimum deployment target
-                    export MACOSX_DEPLOYMENT_TARGET=10.14
-
-                    rm -rf clang-install *.tar.gz
                     python llvm-zorg/zorg/jenkins/monorepo_build.py cmake build \
                       --assertions --cmake-type=RelWithDebInfo \
                       --projects="clang;clang-tools-extra;compiler-rt"
@@ -47,15 +79,17 @@ pipeline {
             }
         }
         stage('Test') {
+            environment {
+                PATH="$PATH:/usr/bin:/usr/local/bin"
+                SANITIZER_IOSSIM_TEST_DEVICE_IDENTIFIER='iPhone 12'
+                COMPILER_RT_TEST_DIR="${WORKSPACE}/clang-build/tools/clang/runtime/compiler-rt-bins/test"
+            }
             steps {
                 timeout(90) {
                     sh '''
                     set -u
-                    export PATH=$PATH:/usr/bin:/usr/local/bin
 
-                    export SANITIZER_IOSSIM_TEST_DEVICE_IDENTIFIER='iPhone 12'
-
-                    COMPILER_RT_TEST_DIR="${WORKSPACE}/clang-build/tools/clang/runtime/compiler-rt-bins/test"
+                    source ./venv/bin/activate
 
                     cd $COMPILER_RT_TEST_DIR/asan && python3 ${WORKSPACE}/clang-build/./bin/llvm-lit \
                       --xunit-xml-output=testresults-asan-IOSSimX86_64Config.xunit.xml -v -vv --timeout=600 \
@@ -82,7 +116,14 @@ pipeline {
             }
         }
     }
+    // ToDo: Restore the email functionality and issue scanner
     post {
+        always {
+            script {
+                sh "rm -rf clang-build clang-install host-compiler"
+            }
+        }
+        /* Disabled email notification.
         success {
             scanForIssues tool: clang()
         }
@@ -99,5 +140,6 @@ pipeline {
                     to: '$DEFAULT_RECIPIENTS',
                     body:'$DEFAULT_CONTENT'
         }
+        */
     }
 }
