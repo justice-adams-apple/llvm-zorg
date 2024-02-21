@@ -10,6 +10,7 @@ LNT_FLAGS="$(build arg --optional LNT_FLAGS)"
 : ${SUBMIT_ORDER:="${GIT_DISTANCE-}"}
 
 . "${TASKDIR}"/utils/venv.sh
+. "${TASKDIR}"/utils/pip_install.sh --upgrade pip
 . "${TASKDIR}"/utils/pip_install.sh awscli
 
 # A generic ctmark run designed to run as a recurring jenkins job with varying
