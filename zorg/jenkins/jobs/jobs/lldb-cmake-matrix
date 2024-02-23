@@ -121,8 +121,10 @@ pipeline {
                       --dotest-flag="--skip-category gmodules" \
                       --dotest-flag="--arch=x86_64"
                     '''
-
-                    LLDB_prepare()
+                    script {
+                        def LLDB = new org.swift.LLDB()
+                        LLDB.LLDB_prepare()
+                    }
                 }
             }
         }
