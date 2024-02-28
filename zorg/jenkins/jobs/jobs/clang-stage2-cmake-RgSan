@@ -126,7 +126,6 @@ pipeline {
                     --cmake-test-target=check-llvm \
                     --cmake-test-target=check-clang
                 '''
-                junit 'clang-build/**/testresults.xunit.xml'
             }
         }
     }
@@ -134,6 +133,7 @@ pipeline {
     post {
         always {
             script {
+                junit allowEmptyResults: true, testResults: "clang-build/**/testresults.xunit.xml"
                 sh "rm -rf clang-build clang-install host-compiler *.tar.gz"
             }
         }

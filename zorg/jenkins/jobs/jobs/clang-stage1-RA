@@ -116,7 +116,6 @@ pipeline {
                     python llvm-zorg/zorg/jenkins/monorepo_build.py cmake testlong
                     '''
                 }
-                junit 'clang-build/**/testresults.xunit.xml'
             }
         }
     }
@@ -124,6 +123,7 @@ pipeline {
     post {
         always {
             script {
+                junit allowEmptyResults: true, testResults: "clang-build/**/testresults.xunit.xml"
                 sh "rm -rf clang-build clang-install host-compiler"
             }
         }
