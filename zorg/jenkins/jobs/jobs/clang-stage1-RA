@@ -134,11 +134,11 @@ pipeline {
                     build job: 'clang-stage2-cmake-RgSan_relay', wait: false
                     build job: 'clang-stage2-Rthinlto_relay', wait: false
                     build job: 'relay-lnt-ctmark', wait: false
+                    build job: 'relay-test-suite-verify-machineinstrs', wait: false
 
                      // ToDo: Enable
                     //build job: 'phase2_modules_relay', wait: false
                     //build job: 'relay-lnt-test-suite', wait: false
-                    //build job: 'relay-test-suite-verify-machineinstrs', wait: false
                 }
             }
         }
@@ -149,11 +149,11 @@ pipeline {
                     build job: 'clang-stage2-cmake-RgSan_relay', wait: false
                     build job: 'clang-stage2-Rthinlto_relay', wait: false
                     build job: 'relay-lnt-ctmark', wait: false
+                    build job: 'relay-test-suite-verify-machineinstrs', wait: false
 
                      // ToDo: Enable
                     //build job: 'phase2_modules_relay', wait: false
                     //build job: 'relay-lnt-test-suite', wait: false
-                    //build job: 'relay-test-suite-verify-machineinstrs', wait: false
                 }
             }
         }
