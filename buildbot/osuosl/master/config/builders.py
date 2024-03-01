@@ -689,8 +689,8 @@ all = [
                         "-DCMAKE_CXX_COMPILER=clang++",
                         "-DCLANG_DEFAULT_LINKER=lld",
                         "-DLLVM_TOOL_GOLD_BUILD=0",
-                        "-DCMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN:PATH=/usr",
-                        "-DCMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN:PATH=/usr",
+                        "-DCMAKE_C_COMPILER_EXTERNAL_TOOLCHAIN:PATH=/gcc-toolchain/usr",
+                        "-DCMAKE_CXX_COMPILER_EXTERNAL_TOOLCHAIN:PATH=/gcc-toolchain/usr",
                         "-DLLVM_CCACHE_BUILD=ON",
                         "-DBUILD_SHARED_LIBS=ON", "-DLLVM_ENABLE_WERROR=ON",
                         "-DCMAKE_BUILD_TYPE=Release",
@@ -945,7 +945,7 @@ all = [
 
     {'name': "llvm-clang-x86_64-gcc-ubuntu",
     'tags'  : ["llvm", "clang", "clang-tools-extra", "compiler-rt", "lld", "cross-project-tests"],
-    'workernames': ["doug-worker-2a"],
+    'workernames': ["sie-linux-worker3"],
     'builddir': "llvm-clang-x86_64-gcc-ubuntu",
     'factory': UnifiedTreeBuilder.getCmakeWithNinjaBuildFactory(
                     depends_on_projects=['llvm','clang','clang-tools-extra','compiler-rt','lld','cross-project-tests'],
@@ -981,27 +981,6 @@ all = [
                         "-DLLVM_PARALLEL_LINK_JOBS=16",
                         "-DLLVM_USE_LINKER=gold",
                         "-DLLVM_ENABLE_WERROR=OFF"])},
-
-    {'name': "llvm-new-debug-iterators",
-    'tags'  : ["llvm", "clang", "clang-tools-extra", "compiler-rt", "lld", "cross-project-tests"],
-    'workernames': ["sie-linux-worker3"],
-    'builddir': "debug-iterators",
-    'factory': UnifiedTreeBuilder.getCmakeWithNinjaBuildFactory(
-                    depends_on_projects=['llvm','clang','clang-tools-extra','compiler-rt','lld','cross-project-tests'],
-                    clean=True,
-                    extra_configure_args=[
-                        "-DCMAKE_C_COMPILER=gcc",
-                        "-DCMAKE_CXX_COMPILER=g++",
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DCLANG_ENABLE_CLANGD=OFF",
-                        "-DLLVM_BUILD_RUNTIME=ON",
-                        "-DLLVM_BUILD_TESTS=ON",
-                        "-DLLVM_ENABLE_ASSERTIONS=ON",
-                        "-DLLVM_EXPERIMENTAL_DEBUGINFO_ITERATORS=ON",
-                        "-DLLVM_INCLUDE_EXAMPLES=OFF",
-                        "-DLLVM_LIT_ARGS=--verbose -j48",
-                        "-DLLVM_PARALLEL_LINK_JOBS=16",
-                        "-DLLVM_USE_LINKER=gold"])},
 
     {'name': "llvm-clang-x86_64-darwin",
     'tags'  : ["llvm", "clang", "clang-tools-extra", "lld", "cross-project-tests"],
@@ -1323,8 +1302,8 @@ all = [
                     extra_cmake_args=[
                         '-DLLVM_ENABLE_ASSERTIONS=True',
                         '-DLLVM_LIT_ARGS=-v',
-                        '-DLLVM_USE_LINKER=lld'],
-                    jobs=None)},
+                        '-DLLVM_USE_LINKER=lld',
+                        '-DLLDB_ENFORCE_STRICT_TEST_REQUIREMENTS=ON'])},
 
     {'name' : "lldb-arm-ubuntu",
     'tags'  : ["lldb"],
@@ -1336,8 +1315,8 @@ all = [
                     extra_cmake_args=[
                         '-DLLVM_ENABLE_ASSERTIONS=True',
                         '-DLLVM_LIT_ARGS=-vj 4',
-                        '-DLLVM_USE_LINKER=gold'],
-                    jobs=None)},
+                        '-DLLVM_USE_LINKER=gold',
+                        '-DLLDB_ENFORCE_STRICT_TEST_REQUIREMENTS=ON'])},
 
     {'name' : "lldb-aarch64-windows",
     'tags'  : ["lldb"],
@@ -1352,8 +1331,8 @@ all = [
                         '-DLLVM_LIT_ARGS=-v',
                         # Hardware breakpoints and watchpoints are not yet supported,
                         # https://github.com/llvm/llvm-project/issues/80665.
-                        '-DLLDB_TEST_USER_ARGS=--skip-category=watchpoint'],
-                    jobs=None)},
+                        '-DLLDB_TEST_USER_ARGS=--skip-category=watchpoint',
+                        '-DLLDB_ENFORCE_STRICT_TEST_REQUIREMENTS=ON'])},
 
 # LLD builders.
 
@@ -1829,6 +1808,9 @@ all += [
                             "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
                             "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
                             ],
+                        env={
+                            'HSA_ENABLE_SDMA':'0',
+                            },
                         install=True,
                         testsuite=False,
                         testsuite_sollvevv=False,
@@ -1874,6 +1856,8 @@ all += [
     'factory' : OpenMPBuilder.getOpenMPCMakeBuildFactory(
                         clean=True,
                         depends_on_projects=['llvm', 'clang', 'compiler-rt', 'libc', 'lld', 'openmp'],
+                        # Special case this bot to account for new (verbose) libc build syntax
+                        enable_runtimes=['openmp', 'compiler-rt'],
                         extraCmakeArgs=[
                             "-DCMAKE_BUILD_TYPE=Release",
                             "-DCLANG_DEFAULT_LINKER=lld",
@@ -1883,11 +1867,12 @@ all += [
                             "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
                             "-DLIBOMPTARGET_FOUND_AMDGPU_GPU=ON",
                             "-DLIBOMP_ARCHER_SUPPORT=OFF",
-                            "-DLIBC_GPU_BUILD=ON",
-                            "-DLIBC_GPU_ARCHITECTURES=gfx906",
-                            "-DLIBC_GPU_TEST_ARCHITECTURE=gfx906",
-                            "-DLIBC_GPU_TEST_JOBS=8",
+                            "-DRUNTIMES_amdgcn-amd-amdhsa_LLVM_ENABLE_RUNTIMES=libc",
+                            "-DLLVM_RUNTIME_TARGETS=default;amdgcn-amd-amdhsa",
                             ],
+                        env={
+                            'HSA_ENABLE_SDMA':'0',
+                            },
                         install=True,
                         testsuite=False,
                         testsuite_sollvevv=False,
@@ -1895,7 +1880,7 @@ all += [
                             "-DTEST_SUITE_SOLLVEVV_OFFLOADING_CFLAGS=-fopenmp;-fopenmp-targets=amdgcn-amd-amdhsa;-Xopenmp-target=amdgcn-amd-amdhsa;-march=gfx906",
                             "-DTEST_SUITE_SOLLVEVV_OFFLOADING_LDLAGS=-fopenmp;-fopenmp-targets=amdgcn-amd-amdhsa;-Xopenmp-target=amdgcn-amd-amdhsa;-march=gfx906",
                         ],
-                        add_lit_checks=["check-clang", "check-llvm", "check-lld", "check-libc"]
+                        add_lit_checks=["check-clang", "check-llvm", "check-lld", "check-libc-amdgcn-amd-amdhsa"]
                     )},
 
     {'name' : "openmp-offload-amdgpu-clang-flang",
@@ -1915,6 +1900,9 @@ all += [
                             "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
                             "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
                             ],
+                        env={
+                            'HSA_ENABLE_SDMA':'0',
+                            },
                         install=True,
                         testsuite=False,
                         testsuite_sollvevv=False,
@@ -2992,57 +2980,6 @@ all += [
                     env={
                         'CC':'clang',
                         'CXX': 'clang++',
-                    })},
-
-    # GoogleCloud Buildguards (investigation/stat)
-    {'name' : "llvm-clang-buildguard5-ubuntu",
-    'tags'  : ["llvm", "clang", "lld", "lldb", "clang-tools-extra"],
-    'collapseRequests' : False,
-    'workernames' : ["gc-builder-5"],
-    'builddir': "buildguard5",
-    'factory' : UnifiedTreeBuilder.getCmakeWithNinjaBuildFactory(
-                    depends_on_projects=["llvm", "clang", "clang-tools-extra", "lld", "lldb", "compiler-rt", "libunwind", "libcxxabi", "libcxx"],
-                    enable_runtimes="auto",     # get runtimes from depends_on_projects.
-                    checks=['check-all'],
-                    clean=True,
-                    extra_configure_args=[
-                        "-DLLVM_CCACHE_BUILD=ON",
-                        "-DLLVM_ENABLE_WERROR=OFF",
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DLLVM_USE_SPLIT_DWARF=ON",
-                        "-DLLVM_ENABLE_ASSERTIONS=ON",
-                        "-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON",
-                        "-DCLANG_DEFAULT_LINKER=lld",
-                        "-DLLVM_USE_LINKER=gold",
-                        "-DLLVM_OPTIMIZED_TABLEGEN=ON",
-                        "-DCMAKE_CXX_FLAGS=-D__OPTIMIZE__ -Wno-misleading-indentation",
-                        "-DBUILD_SHARED_LIBS=ON",
-                        "-DLLVM_LIT_ARGS=-v -vv"],
-                    env={
-                        'CCACHE_DIR' : WithProperties("%(builddir)s/ccache-db"),
-                    })},
-    {'name' : "llvm-clang-buildguard6-win",
-    'tags'  : ["llvm", "clang", "lld", "lldb", "clang-tools-extra"],
-    'collapseRequests' : False,
-    'workernames' : ["gc-builder-6-win", "gc-builder-7-win"],
-    'builddir': "buildguard6",
-    'factory' : XToolchainBuilder.getCmakeWithMSVCBuildFactory(
-                    vs="autodetect",
-                    checks=['check-all'],
-                    clean=True,
-                    extra_configure_args=[
-                        "-DLLVM_CCACHE_BUILD=ON",
-                        "-DLLVM_ENABLE_WERROR=OFF",
-                        "-DCMAKE_BUILD_TYPE=Release",
-                        "-DLLVM_USE_SPLIT_DWARF=ON",
-                        "-DLLVM_ENABLE_ASSERTIONS=ON",
-                        "-DLLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON",
-                        "-DCLANG_DEFAULT_LINKER=lld",
-                        "-DLLVM_OPTIMIZED_TABLEGEN=ON",
-                        "-DCMAKE_CXX_FLAGS=-D__OPTIMIZE__",
-                        "-DLLVM_LIT_ARGS=-v -vv"],
-                    env={
-                        'CCACHE_DIR' : WithProperties("%(builddir)s/ccache-db"),
                     })},
 
     # Builders similar to used in Buildkite premerge pipeline.

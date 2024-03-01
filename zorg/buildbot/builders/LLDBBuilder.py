@@ -4,6 +4,7 @@ from buildbot.process.properties import WithProperties, Property
 from buildbot.plugins import steps
 
 from zorg.buildbot.commands.CmakeCommand import CmakeCommand
+from zorg.buildbot.commands.NinjaCommand import NinjaCommand
 from zorg.buildbot.builders.Util import getVisualStudioEnvironment
 from zorg.buildbot.builders.Util import extractVSEnvironment
 from zorg.buildbot.process.factory import LLVMBuildFactory
@@ -11,7 +12,6 @@ from zorg.buildbot.process.factory import LLVMBuildFactory
 # CMake builds
 def getLLDBCMakeBuildFactory(
             clean=False,
-            jobs="%(jobs)s",
 
             # Source directory containing a built python
             python_source_dir=None,
@@ -44,16 +44,6 @@ def getLLDBCMakeBuildFactory(
 
     f.addGetSourcecodeSteps()
 
-    build_cmd=['ninja']
-    install_cmd = ['ninja','install']
-    test_cmd = ['ninja','check-lldb']
-    lit_args = '-v'
-
-    if jobs:
-        build_cmd.append(WithProperties("-j%s" % jobs))
-        install_cmd.append(WithProperties("-j%s" % jobs))
-        test_cmd.append(WithProperties("-j%s" % jobs))
-
     ############# CLEANING
     cleanBuildRequested = lambda step: clean or step.build.getProperty("clean", default=step.build.getProperty("clean_obj"))
     f.addStep(steps.RemoveDirectory(name='clean '+build_dir,
@@ -67,7 +57,7 @@ def getLLDBCMakeBuildFactory(
     cmake_options = [
         "-G", "Ninja",
         "-DCMAKE_BUILD_TYPE=" + config,
-        "-DLLVM_LIT_ARGS='%s'" % lit_args,
+        "-DLLVM_LIT_ARGS=-v",
         "-DCMAKE_INSTALL_PREFIX=../install",
         "-DLLVM_ENABLE_PROJECTS=%s" % ";".join(f.depends_on_projects),
         ]
@@ -84,16 +74,15 @@ def getLLDBCMakeBuildFactory(
                            env=env,
                            workdir=build_dir))
 
-    f.addStep(WarningCountingShellCommand(name='build',
-                          command=build_cmd,
+    f.addStep(NinjaCommand(name='build',
                           haltOnFailure=True,
                           description='ninja build',
                           workdir=build_dir,
                           env=env))
 
     ignoreInstallFail = bool(install != 'ignoreFail')
-    f.addStep(ShellCommand(name='install',
-                          command=install_cmd,
+    f.addStep(NinjaCommand(targets=['install'],
+                          name='install',
                           flunkOnFailure=ignoreInstallFail,
                           description='ninja install',
                           workdir=build_dir,
@@ -101,11 +90,11 @@ def getLLDBCMakeBuildFactory(
                           env=env))
 
     ignoreTestFail = bool(test != 'ignoreFail')
-    f.addStep(ShellCommand(name='test',
-                          command=test_cmd,
+    f.addStep(NinjaCommand(targets=['check-lldb'],
+                          name='test',
                           flunkOnFailure=ignoreTestFail,
                           timeout=testTimeout,
-                          description='ninja test',
+                          description='ninja check-lldb',
                           workdir=build_dir,
                           doStepIf=bool(test),
                           env=env))
