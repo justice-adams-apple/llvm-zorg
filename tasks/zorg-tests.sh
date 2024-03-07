@@ -1,5 +1,7 @@
 . "${TASKDIR}"/utils/venv.sh
+. "${TASKDIR}"/utils/pip_install.sh --upgrade pip
 . "${TASKDIR}"/utils/venv_lit.sh
+. "${TASKDIR}"/utils/pip_install.sh -r config/requirements.txt
 
 mkdir -p result
 cd "config/test/jenkins"
