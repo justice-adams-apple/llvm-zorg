@@ -24,8 +24,10 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                if(params.CLEAN) {
-                    deleteDir()
+                script {
+                    if(params.CLEAN) {
+                        deleteDir()
+                    }
                 }
 
                 timeout(30) {
@@ -88,6 +90,7 @@ pipeline {
             }
         }
         stage('Build') {
+            // ToDo: Remove environment variable
             environment {
                PATH="$PATH:/usr/bin:/usr/local/bin"
                SRC="$WORKSPACE/src"
@@ -98,7 +101,7 @@ pipeline {
                CXX="$WORKSPACE/host-compiler/bin/clang++"
                TOOLS="clang lldb"
                PROJECTS=""
-               HISTORIC_COMPILER=clang-13
+               HISTORIC_COMPILER="clang-13"
                NO_PROXY='169.254.169.254'
             }
             steps {
