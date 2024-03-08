@@ -157,5 +157,16 @@ pipeline {
                     body:'$DEFAULT_CONTENT'
         }
         */
+
+        success {
+            script {
+                build job: 'clang-3.4-debuginfo-statistics', wait: false
+            }
+        }
+        unstable {
+            script {
+                build job: 'clang-3.4-debuginfo-statistics', wait: false
+            }
+        }
     }
 }
