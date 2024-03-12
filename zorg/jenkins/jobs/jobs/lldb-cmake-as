@@ -5,7 +5,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM-arm64', description: 'Node label to run on')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'macos-arm64', description: 'Node label to run on')
 
         string(name: 'GIT_SHA', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git commit to build.')
 
@@ -52,7 +52,7 @@ pipeline {
         }
         stage('Setup Venv') {
             environment {
-               PATH="$PATH:/usr/bin:/usr/local/bin"
+               PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
             steps {
                 sh '''
@@ -112,7 +112,7 @@ pipeline {
         }
         stage('Clean Test Results') {
             environment {
-                PATH="$PATH:/usr/bin:/usr/local/bin"
+                PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
             steps {
                 timeout(10) {
@@ -164,9 +164,7 @@ pipeline {
         }
         stage('Upload artifacts (LLDB)') {
             environment {
-                // ToDo: Remove environment variable
-               PATH="$PATH:/usr/bin:/usr/local/bin"
-               NO_PROXY='169.254.169.254'
+               PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
            steps {
                timeout(90) {
@@ -208,9 +206,9 @@ pipeline {
                     to: '$DEFAULT_RECIPIENTS',
                     body:'$DEFAULT_CONTENT'
         }
+        */
         success {
              build job: 'relay-lldb', wait: false
         }
-        */
     }
 }
