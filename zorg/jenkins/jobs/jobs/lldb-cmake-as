@@ -69,7 +69,7 @@ pipeline {
         }
         stage('Build') {
             environment {
-                PATH="$PATH:/usr/bin:/usr/local/bin"
+                PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
             steps {
                 timeout(120) {
@@ -126,7 +126,7 @@ pipeline {
         }
         stage('Test (Debug Info)') {
             environment {
-                PATH="$PATH:/usr/bin:/usr/local/bin"
+                PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
             steps {
                 timeout(30) {
@@ -148,7 +148,7 @@ pipeline {
         }
         stage('Test (LLDB)') {
             environment {
-                PATH="$PATH:/usr/bin:/usr/local/bin"
+                PATH="$PATH:/usr/bin:/usr/local/bin:/opt/homebrew/bin/"
             }
             steps {
                 timeout(90) {
