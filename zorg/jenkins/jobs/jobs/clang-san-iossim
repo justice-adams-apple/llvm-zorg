@@ -1,6 +1,6 @@
 pipeline {
     parameters {
-        string(name: 'LABEL', defaultValue: params.LABEL ?: 'LLVM', description: 'Node label to run on')
+        string(name: 'LABEL', defaultValue: params.LABEL ?: 'macos-x86_64&&ninja', description: 'Node label to run on')
 
         string(name: 'GIT_REVISION', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git revision to build')
     }
