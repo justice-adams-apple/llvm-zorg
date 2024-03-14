@@ -109,12 +109,18 @@ pipeline {
                     '''
                 }
             }
+            post {
+                always {
+                    script {
+                        junit allowEmptyResults: true, testResults: "clang-build/**/testresults.xunit.xml"
+                    }
+                }
+            }
         }
     }
     post {
         always {
             script {
-                junit allowEmptyResults: true, testResults: "clang-build/**/testresults.xunit.xml"
                 sh "rm -rf clang-*.tar.gz"
             }
         }
