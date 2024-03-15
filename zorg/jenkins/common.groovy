@@ -55,30 +55,6 @@ private def post_build() {
     if (currentBuild.description == null)
         currentBuild.description = ""
     currentBuild.description += descr_body
-
-    // Send notification email.
-    def prev_build = currentBuild.getPreviousBuild()
-    if ((prev_build == null ||
-         prev_build.result != currentBuild.currentResult) &&
-        currentBuild.currentResult == 'FAILURE') {
-        def email_template = readTrusted 'zorg/jenkins/email.template'
-        def body = render_template(email_template, log_summary)
-        // ToDo: Restore the email functionality and issue scanner
-        /* Disabled email notification.
-        emailext subject: '$DEFAULT_SUBJECT',
-            presendScript: '$DEFAULT_PRESEND_SCRIPT',
-            postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
-            recipientProviders: [
-                [$class: 'CulpritsRecipientProvider'],
-                [$class: 'DevelopersRecipientProvider'],
-                [$class: 'RequesterRecipientProvider'],
-            ],
-            replyTo: '$DEFAULT_REPLYTO',
-            to: '$DEFAULT_RECIPIENTS',
-            body: body
-        */
-    }
-    // TODO: Notify IRC.
 }
 
 def task_pipeline(label, body) {

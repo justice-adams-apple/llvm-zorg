@@ -189,7 +189,8 @@ pipeline {
     }
 
     post {
-        always {    
+        always {
+            // ToDo: Restore issue scanner
             //scanForIssues tool: clang()
             junit 'test/results.xml'
         }

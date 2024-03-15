@@ -186,19 +186,4 @@ pipeline {
             }
         }
     }
-    // ToDo: Restore the email functionality and issue scanner
-    /* Disabled email notification.
-    post {
-        failure {
-            script {
-                emailext subject: '$DEFAULT_SUBJECT',
-                        presendScript: '$DEFAULT_PRESEND_SCRIPT',
-                        postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
-                        replyTo: '$DEFAULT_REPLYTO',
-                        to: 'lldb@group.apple.com',
-                        body:'$DEFAULT_CONTENT'
-            }
-        }
-    }
-    */
 }

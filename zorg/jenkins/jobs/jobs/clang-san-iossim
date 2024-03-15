@@ -124,30 +124,13 @@ pipeline {
             }
         }
     }
-    // ToDo: Restore the email functionality and issue scanner
     post {
         always {
             script {
+                // ToDo: Restore the issue scanner
+                // scanForIssues tool: clang()
                 sh "rm -rf clang-build clang-install host-compiler"
             }
         }
-        /* Disabled email notification.
-        success {
-            scanForIssues tool: clang()
-        }
-        regression {
-            emailext subject: '$DEFAULT_SUBJECT',
-                    presendScript: '$DEFAULT_PRESEND_SCRIPT',
-                    postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
-                    recipientProviders: [
-                            [$class: 'CulpritsRecipientProvider'],
-                            [$class: 'DevelopersRecipientProvider'],
-                            [$class: 'RequesterRecipientProvider'],
-                    ],
-                    replyTo: '$DEFAULT_REPLYTO',
-                    to: '$DEFAULT_RECIPIENTS',
-                    body:'$DEFAULT_CONTENT'
-        }
-        */
     }
 }

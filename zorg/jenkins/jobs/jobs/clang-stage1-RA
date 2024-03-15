@@ -126,10 +126,11 @@ pipeline {
             }
         }
     }
-    // ToDo: Restore the email functionality and issue scanner
     post {
         always {
             script {
+                // ToDo: Restore the issue scanner
+                // scanForIssues tool: clang()
                 sh "rm -rf clang-build clang-install host-compiler"
             }
         }

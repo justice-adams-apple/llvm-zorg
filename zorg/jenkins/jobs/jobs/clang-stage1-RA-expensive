@@ -107,10 +107,12 @@ pipeline {
             }
         }
     }
-    // ToDo: Restore the email functionality and issue scanner
     post {
         always {
             script {
+               // ToDo: Restore the issue scanner
+               // scanForIssues tool: clang()
+
                 junit allowEmptyResults: true, testResults: "clang-build/**/testresults.xunit.xml"
                 junit allowEmptyResults: true, testResults: "clang-build/asan-IOSSimX86_64Config.xunit.xml"
                 junit allowEmptyResults: true, testResults: "clang-build/asan-IOSSimI386Config.xunit.xml"

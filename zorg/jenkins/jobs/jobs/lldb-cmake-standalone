@@ -234,21 +234,11 @@ pipeline {
             }
         }
     }
-    // ToDo: Restore the email functionality and issue scanner
-    /* Disabled email notification.
+    /*
     post {
-        changed {
-            emailext subject: '$DEFAULT_SUBJECT',
-                    presendScript: '$DEFAULT_PRESEND_SCRIPT',
-                    postsendScript: '$DEFAULT_POSTSEND_SCRIPT',
-                    recipientProviders: [
-                            [$class: 'CulpritsRecipientProvider'],
-                            [$class: 'DevelopersRecipientProvider'],
-                            [$class: 'RequesterRecipientProvider'],
-                    ],
-                    replyTo: '$DEFAULT_REPLYTO',
-                    to: '$DEFAULT_RECIPIENTS',
-                    body:'$DEFAULT_CONTENT'
+        always {
+            // ToDo: Restore issue scanner
+            // scanForIssues tool: clang()
         }
     }
     */
