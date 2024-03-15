@@ -47,7 +47,7 @@ def pipeline(joblist,
         artifact_url='clang-stage1-RA/latest',
         last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
-    node('macos-x86_64&&ninja') {
+    node(label: 'macos-x86_64') {
         stage('main') {
             // Download aws CLI used to gather artifacts
             sh """
