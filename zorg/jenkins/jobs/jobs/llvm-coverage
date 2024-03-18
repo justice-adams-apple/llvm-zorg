@@ -196,8 +196,8 @@ pipeline {
         }
         success {
             script {
-                // ToDo: For now just zip up the coverage report as an artifact
-                zip zipFile: 'coverage.zip', archive: true, dir: "${env.WORKSPACE}/coverage-reports"
+                // ToDo: For now just archive coverage report as an artifact
+                archiveArtifacts artifacts: "${env.WORKSPACE}/coverage-reports/**"
             }
         }
     }

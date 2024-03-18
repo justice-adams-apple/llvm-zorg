@@ -45,7 +45,6 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     if(joblist.any { it.contains("lnt-ctmark") }) {
          for (j in joblist) {
             parallel_builds[j].call()
-            sleep 300
          }
     } else {
         parallel parallel_builds
