@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
 def common = evaluate readTrusted('zorg/jenkins/common.groovy')
-common.task_pipeline('LLVM') {
+common.task_pipeline('macos-x86_64') {
     sh 'config/tasks/task jenkinsrun config/tasks/zorg-tests.sh'
 }
