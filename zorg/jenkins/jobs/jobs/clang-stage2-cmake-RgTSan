@@ -8,7 +8,7 @@ pipeline {
 
         string(name: 'GIT_SHA', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git commit to build.')
 
-        string(name: 'ARTIFACT', defaultValue: params.ARTIFACT ?: 'clang-stage1-RA/latest', description: 'Clang artifact to use')
+        string(name: 'ARTIFACT', defaultValue: params.ARTIFACT ?: 'llvm.org/clang-stage1-RA/latest', description: 'Clang artifact to use')
     }
 
     agent {
