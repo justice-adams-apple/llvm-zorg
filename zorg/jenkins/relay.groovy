@@ -44,8 +44,8 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
 }
 
 def pipeline(joblist,
-        artifact_url='clang-stage1-RA/latest',
-        last_good_properties_url='clang-stage1-RA/last_good_build.properties') {
+        artifact_url='llvm.org/clang-stage1-RA/latest',
+        last_good_properties_url='llvm.org/clang-stage1-RA/last_good_build.properties') {
     //ToDo: Do we want to set up trigger specific nodes for this
     node(label: 'macos-x86_64') {
         stage('main') {
@@ -67,15 +67,3 @@ def pipeline(joblist,
         }
     }
 }
-
-def lldb_pipeline(joblist,
-        artifact_url='http://green-dragon-21.local/artifacts/',
-        last_good_properties_url='http://green-dragon-21.local/artifacts/lldb-cmake/last_good_build.properties') {
-    node('master') {
-        stage('main') {
-            relay_steps joblist, artifact_url, last_good_properties_url
-        }
-    }
-}
-
-return this
