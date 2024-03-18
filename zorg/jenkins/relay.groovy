@@ -67,3 +67,5 @@ def pipeline(joblist,
         }
     }
 }
+
+return this
