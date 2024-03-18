@@ -40,7 +40,16 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
             build job: jobname, parameters: job_params
         }
     }
-    parallel parallel_builds
+
+    // Workaround to prevent LNT jobs from running in parallel and overloading the LNT server with submissions
+    if(joblist.any { it.contains("lnt-ctmark") }) {
+         for (j in joblist) {
+            parallel_builds[j].call()
+            sleep 300
+         }
+    } else {
+        parallel parallel_builds
+    }
 }
 
 def pipeline(joblist,
