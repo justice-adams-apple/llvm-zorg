@@ -197,7 +197,7 @@ pipeline {
         success {
             script {
                 // ToDo: For now just archive coverage report as an artifact
-                archiveArtifacts artifacts: "${env.WORKSPACE}/coverage-reports/**"
+                archiveArtifacts artifacts: "coverage-reports/**"
             }
         }
     }
