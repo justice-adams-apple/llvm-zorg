@@ -37,7 +37,7 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
                  name: 'GIT_DISTANCE',
                  value: props.GIT_DISTANCE],
             ]
-            build job: jobname, parameters: job_params
+            build job: jobname, parameters: job_params, propagate: false
         }
     }
 
