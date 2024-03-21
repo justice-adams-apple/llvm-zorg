@@ -37,7 +37,6 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption',
-                            reference: '/Users/Shared/llvm-project.git',
                             noTags: true, timeout: 30]
                         ]])
                     }
@@ -241,7 +240,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }
@@ -308,7 +307,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }
@@ -376,7 +375,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }
@@ -443,7 +442,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }
@@ -510,7 +509,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }
@@ -577,7 +576,7 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption', timeout: 30,
-                            reference: '/Users/Shared/llvm-project.git']
+                            timeout: 30]
                         ]])
                     }
                 }

@@ -23,7 +23,7 @@ pipeline {
                         [name: params.GIT_REVISION]
                     ], extensions: [
                         [$class: 'CloneOption',
-                        reference: '/Users/Shared/llvm-project.git']
+                        timeout: 30]
                     ], userRemoteConfigs: [
                         [url: 'https://github.com/llvm/llvm-project.git']
                     ]])

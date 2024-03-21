@@ -32,7 +32,6 @@ pipeline {
                             [url: 'https://github.com/llvm/llvm-project.git']
                         ], extensions: [
                             [$class: 'CloneOption',
-                            reference: '/Users/Shared/llvm-project.git',
                             noTags: true, timeout: 30]
                         ]])
                     }
