@@ -1,0 +1,1 @@
+These are jenkins resources to be used in the shared library jobs
