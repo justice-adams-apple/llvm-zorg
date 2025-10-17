@@ -7,11 +7,19 @@ def call(Map params) {
         def command = params.command
         def args = params.args ?: []
         def repoPath = params.repoPath ?: '.'
+        def workspace = params.workspace ?: '.'
 
         def cmdLine = "python3 bisect.py ${command}"
+
+        // Add common arguments
         if (repoPath != '.') {
             cmdLine += " --repo-path '${repoPath}'"
         }
+        if (workspace != '.') {
+            cmdLine += " --workspace '${workspace}'"
+        }
+
+        // Add specific arguments
         if (args) {
             cmdLine += " ${args.join(' ')}"
         }
@@ -24,30 +32,81 @@ def call(Map params) {
             return [output: result]
         }
     } finally {
-        sh 'rm -f bisect.py'
+        // Keep the script for debugging but don't fail if cleanup fails
+        try {
+            sh 'rm -f bisect.py'
+        } catch (Exception e) {
+            echo "Warning: Could not clean up bisect.py: ${e}"
+        }
     }
 }
 
-def initializeBisection(String goodCommit, String badCommit, String stateFile, String repoPath = '.') {
+// High-level convenience methods for easy use in pipelines. They simply wrap the python commands
+def initializeBisection(String goodCommit, String badCommit, String testJob, 
+                       String repoPath = '.', String sessionId = null) {
+    def args = [goodCommit, badCommit, '--test-job', testJob]
+    if (sessionId) {
+        args.addAll(['--session-id', sessionId])
+    }
+    
     return bisectionManager([
         command: 'init',
-        args: [goodCommit, badCommit, stateFile],
+        args: args,
         repoPath: repoPath
     ])
 }
 
-def recordResult(String commit, String result, String stateFile, String repoPath = '.') {
+def logStepStart(int stepNumber, String repoPath = '.') {
+    return bisectionManager([
+        command: 'log-step',
+        args: [stepNumber.toString()],
+        repoPath: repoPath
+    ])
+}
+
+def showRestartInstructions(int stepNumber, String testJob, String repoPath = '.') {
+    bisectionManager([
+        command: 'show-restart',
+        args: [stepNumber.toString(), testJob, '--platform', 'jenkins'],
+        repoPath: repoPath
+    ])
+}
+
+def logJobExecution(String jobName, String result, double duration, 
+                   String jobUrl = null, String buildNumber = null, String repoPath = '.') {
+    def args = [jobName, result, duration.toString()]
+    if (jobUrl) {
+        args.addAll(['--job-url', jobUrl])
+    }
+    if (buildNumber) {
+        args.addAll(['--build-number', buildNumber])
+    }
+    
+    bisectionManager([
+        command: 'log-job',
+        args: args,
+        repoPath: repoPath
+    ])
+}
+
+def recordTestResult(String commit, String result, String repoPath = '.') {
     return bisectionManager([
         command: 'record',
-        args: [commit, result, stateFile],
+        args: [commit, result],
         repoPath: repoPath
     ])
 }
 
-def getStatus(String stateFile, String repoPath = '.') {
+def generateFinalReport(String repoPath = '.') {
     return bisectionManager([
-        command: 'status',
-        args: [stateFile],
+        command: 'final-report',
+        repoPath: repoPath
+    ])
+}
+
+def displaySummary(String repoPath = '.') {
+    bisectionManager([
+        command: 'summary',
         repoPath: repoPath
     ])
 }
