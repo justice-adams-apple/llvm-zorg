@@ -27,7 +27,7 @@ def call(Map params) {
         def result = sh(script: cmdLine, returnStdout: true).trim()
 
         try {
-            return readJSON text: result
+            return readJSON(text: result)  // Fixed: Added parentheses
         } catch (Exception e) {
             return [output: result]
         }
@@ -42,13 +42,13 @@ def call(Map params) {
 }
 
 // High-level convenience methods for easy use in pipelines. They simply wrap the python commands
-def initializeBisection(String goodCommit, String badCommit, String testJob, 
+def initializeBisection(String goodCommit, String badCommit, String testJob,
                        String repoPath = '.', String sessionId = null) {
     def args = [goodCommit, badCommit, '--test-job', testJob]
     if (sessionId) {
         args.addAll(['--session-id', sessionId])
     }
-    
+
     return bisectionManager([
         command: 'init',
         args: args,
@@ -72,7 +72,7 @@ def showRestartInstructions(int stepNumber, String testJob, String repoPath = '.
     ])
 }
 
-def logJobExecution(String jobName, String result, double duration, 
+def logJobExecution(String jobName, String result, double duration,
                    String jobUrl = null, String buildNumber = null, String repoPath = '.') {
     def args = [jobName, result, duration.toString()]
     if (jobUrl) {
@@ -81,7 +81,7 @@ def logJobExecution(String jobName, String result, double duration,
     if (buildNumber) {
         args.addAll(['--build-number', buildNumber])
     }
-    
+
     bisectionManager([
         command: 'log-job',
         args: args,
