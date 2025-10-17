@@ -31,7 +31,8 @@ def call(Map params) {
         def lines = result.split('\n')
 
         for (int i = 0; i < lines.length; i++) {
-            if (lines[i].trim().startsWith('{') || lines[i].trim().startsWith('[')) {
+            def line = lines[i]
+            if (line.startsWith('{') || (line.startsWith('[') && line.length() > 10 && line.contains('"'))) {
                 jsonStart = i
                 break
             }
@@ -87,7 +88,7 @@ def logStepStart(int stepNumber, String repoPath = '.') {
 }
 
 def showRestartInstructions(int stepNumber, String testJob, String repoPath = '.') {
-    bisectionManager([
+    return bisectionManager([
         command: 'show-restart',
         args: [stepNumber.toString(), testJob, '--platform', 'jenkins'],
         repoPath: repoPath
