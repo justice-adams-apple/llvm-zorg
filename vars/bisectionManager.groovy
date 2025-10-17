@@ -26,9 +26,31 @@ def call(Map params) {
 
         def result = sh(script: cmdLine, returnStdout: true).trim()
 
-        try {
-            return readJSON(text: result)  // Fixed: Added parentheses
-        } catch (Exception e) {
+        // Look for JSON in the output (starts with { or [)
+        def jsonStart = -1
+        def lines = result.split('\n')
+
+        for (int i = 0; i < lines.length; i++) {
+            if (lines[i].trim().startsWith('{') || lines[i].trim().startsWith('[')) {
+                jsonStart = i
+                break
+            }
+        }
+
+        if (jsonStart >= 0) {
+            // Extract JSON part
+            def jsonLines = lines[jsonStart..-1]
+            def jsonText = jsonLines.join('\n')
+
+            try {
+                return readJSON(text: jsonText)
+            } catch (Exception e) {
+                echo "Warning: Failed to parse JSON: ${e.message}"
+                echo "JSON text was: ${jsonText}"
+                return [output: result]
+            }
+        } else {
+            // No JSON found, return as text output
             return [output: result]
         }
     } finally {
