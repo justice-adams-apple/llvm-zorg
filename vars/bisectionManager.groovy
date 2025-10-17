@@ -38,6 +38,19 @@ def call(Map params) {
             }
         }
 
+        // Print only non-JSON output
+        if (jsonStart >= 0) {
+            // Print only the lines before JSON starts
+            def textLines = lines[0..<jsonStart]
+            def textOutput = textLines.join('\n').trim()
+            if (textOutput) {
+                echo textOutput
+            }
+        } else {
+            // No JSON found, print everything
+            echo result
+        }
+
         if (jsonStart >= 0) {
             // Extract JSON part
             def jsonLines = lines[jsonStart..-1]
