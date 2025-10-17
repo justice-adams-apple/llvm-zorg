@@ -1,4 +1,10 @@
-@Library('llvm-zorg') _
+// Reference the local shared library
+library identifier: "zorg-shared-lib@${env.BRANCH_NAME}",
+        retriever: modernSCM([
+            $class: 'GitSCMSource',
+            remote: scm.userRemoteConfigs[0].url,
+            credentialsId: scm.userRemoteConfigs[0].credentialsId
+        ])
 
 pipeline {
     agent any
