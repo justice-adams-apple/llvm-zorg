@@ -120,7 +120,7 @@ def fetchArtifactStage(config = [:]) {
 
                     // Trigger stage 1 job and wait for completion
                     def stage1Build = script.build(
-                        job: config.stage1Job
+                        job: config.stage1Job,
                         parameters: [
                             script.string(name: 'GIT_SHA', value: script.params.GIT_SHA),
                             script.string(name: 'BISECT_GOOD', value: script.params.BISECT_GOOD),
