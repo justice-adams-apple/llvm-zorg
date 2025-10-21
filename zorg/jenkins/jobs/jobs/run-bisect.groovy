@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            label'macos-x86_64'
+        }
+    }
 
     parameters {
         string(name: 'GOOD_COMMIT', description: 'Known good commit SHA', defaultValue: '')
