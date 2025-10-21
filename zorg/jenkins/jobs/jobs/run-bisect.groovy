@@ -1,3 +1,13 @@
+//ToDo: This will go away with the global shared library
+branchName = 'jadams/shared-library'
+
+library identifier: "zorg-shared-lib@${branchName}",
+            retriever: modernSCM([
+                $class: 'GitSCMSource',
+                remote: scm.userRemoteConfigs[0].url,
+                credentialsId: scm.userRemoteConfigs[0].credentialsId
+            ])
+
 pipeline {
     agent {
         node {
@@ -19,32 +29,6 @@ pipeline {
     }
 
     stages {
-        stage('Load Library') {
-            steps {
-                script {
-                    // Get branch name with fallback
-                    def branchName = env.GIT_BRANCH ?: sh(
-                        script: "git rev-parse --abbrev-ref HEAD",
-                        returnStdout: true
-                    ).trim()
-
-                    // Clean up branch name (remove origin/ prefix if present)
-                    if (branchName.startsWith('origin/')) {
-                        branchName = branchName.substring(7)
-                    }
-
-                    echo "Loading shared library from branch: ${branchName}"
-
-                    library identifier: "zorg-shared-lib@${branchName}",
-                            retriever: modernSCM([
-                                $class: 'GitSCMSource',
-                                remote: scm.userRemoteConfigs[0].url,
-                                credentialsId: scm.userRemoteConfigs[0].credentialsId
-                            ])
-                }
-            }
-        }
-
         stage('Validate Parameters') {
             steps {
                 script {

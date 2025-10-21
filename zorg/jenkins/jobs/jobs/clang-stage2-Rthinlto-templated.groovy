@@ -7,7 +7,7 @@ library identifier: "zorg-shared-lib@${branchName}",
                 remote: scm.userRemoteConfigs[0].url,
                 credentialsId: scm.userRemoteConfigs[0].credentialsId
             ])
-// Now call clangPipeline directly (this becomes the only pipeline)
+
 clangPipeline([
     stage: 2,
     jobName: 'clang-stage2-Rthinlto',
