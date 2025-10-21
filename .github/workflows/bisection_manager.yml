@@ -1,0 +1,152 @@
+name: Git Bisection
+
+on:
+  workflow_dispatch:
+    inputs:
+      good_commit:
+        description: 'Known good commit SHA'
+        required: true
+        type: string
+      bad_commit:
+        description: 'Known bad commit SHA'
+        required: true
+        type: string
+      test_workflow:
+        description: 'Workflow to run for testing each commit'
+        required: true
+        type: string
+      repo_path:
+        description: 'Path to repository to bisect'
+        required: false
+        default: 'llvm-project'
+        type: string
+      session_id:
+        description: 'Session ID to continue (optional)'
+        required: false
+        type: string
+      dry_run:
+        description: 'Dry run mode'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  bisection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 480
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Setup and initialize
+        run: |
+          cp resources/scripts/bisection_manager.py ./
+          chmod +x bisection_manager.py
+          
+          git cat-file -e ${{ inputs.good_commit }}
+          git cat-file -e ${{ inputs.bad_commit }}
+          
+          SESSION_ARG=""
+          if [ -n "${{ inputs.session_id }}" ]; then
+            SESSION_ARG="--session-id ${{ inputs.session_id }}"
+          fi
+          
+          python3 bisection_manager.py init \
+            ${{ inputs.good_commit }} \
+            ${{ inputs.bad_commit }} \
+            --test-job ${{ inputs.test_workflow }} \
+            --repo-path ${{ inputs.repo_path }} \
+            $SESSION_ARG
+
+      - name: Execute bisection
+        run: |
+          step_number=1
+          max_steps=50
+          
+          while [ $step_number -le $max_steps ]; do
+            step_info_json=$(python3 bisection_manager.py log-step $step_number --repo-path ${{ inputs.repo_path }})
+            step_type=$(echo "$step_info_json" | jq -r '.type')
+            
+            if [ "$step_type" = "complete" ]; then
+              break
+            fi
+            
+            python3 bisection_manager.py show-restart $step_number ${{ inputs.test_workflow }} --platform github --repo-path ${{ inputs.repo_path }}
+            
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              if [ $((step_number % 2)) -eq 0 ]; then
+                simulated_result="SUCCESS"
+              else
+                simulated_result="FAILURE"
+              fi
+              echo "🎭 Simulated result: $simulated_result"
+              
+              commit=$(echo "$step_info_json" | jq -r '.commit')
+              python3 bisection_manager.py record $commit $simulated_result --repo-path ${{ inputs.repo_path }}
+            else
+              commit=$(echo "$step_info_json" | jq -r '.commit')
+              session_id=$(echo "$step_info_json" | jq -r '.session_id')
+              
+              start_time=$(date +%s)
+              
+              gh workflow run ${{ inputs.test_workflow }} \
+                --field git_sha=$commit \
+                --field bisect_session_id=$session_id \
+                --field bisect_step=$step_number
+              
+              sleep 10
+              latest_run_id=$(gh run list --workflow=${{ inputs.test_workflow }} --limit=1 --json databaseId --jq '.[0].databaseId')
+              gh run watch $latest_run_id --exit-status
+              
+              run_info=$(gh run view $latest_run_id --json conclusion,url)
+              run_status=$(echo "$run_info" | jq -r '.conclusion')
+              run_url=$(echo "$run_info" | jq -r '.url')
+              
+              duration=$(($(date +%s) - start_time))
+              
+              result="SUCCESS"
+              if [ "$run_status" != "success" ]; then
+                result="FAILURE"
+              fi
+              
+              python3 bisection_manager.py log-job \
+                ${{ inputs.test_workflow }} \
+                $result \
+                $duration \
+                --job-url $run_url \
+                --build-number $latest_run_id \
+                --repo-path ${{ inputs.repo_path }}
+              
+              python3 bisection_manager.py record $commit $result --repo-path ${{ inputs.repo_path }}
+            fi
+            
+            step_number=$((step_number + 1))
+            sleep 2
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate final report and summary
+        if: always()
+        run: |
+          python3 bisection_manager.py final-report --repo-path ${{ inputs.repo_path }}
+          python3 bisection_manager.py summary --repo-path ${{ inputs.repo_path }}
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bisection-results-${{ github.run_id }}
+          path: |
+            bisection_state.json
+            bisection.log
+            restart_instructions.log
+            bisection_final_report.txt
