@@ -1,16 +1,11 @@
 import org.llvm.jenkins.ClangBuilder
 
 def call(Map config = [:]) {
-    // Validate required parameters
-    if (!config.jobTemplate) {
-        error("jobTemplate is required but was not provided in config. Please specify a jobTemplate (e.g., 'clang-stage2-Rthinlto')")
-    }
-
     def builder = new ClangBuilder(this)
     def buildConfig = config.buildConfig ?: [:]
     def testConfig = config.testConfig ?: [:]
     def stagesToRun = config.stages ?: ['checkout', 'build', 'test']
-    def jobTemplate = config.jobTemplate
+    def jobName = config.jobName
 
     pipeline {
         options {
@@ -37,7 +32,7 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         echo "✅ Configuration validated successfully"
-                        echo "Job Template: ${jobTemplate}"
+                        echo "Job Name: ${jobName}"
                         echo "Build Config: ${buildConfig}"
                         echo "Test Config: ${testConfig}"
                         echo "Stages to run: ${stagesToRun}"
@@ -60,7 +55,6 @@ def call(Map config = [:]) {
                         }
 
                         echo "Build Type: ${buildType}"
-                        echo "Job Template: ${jobTemplate}"
                     }
                 }
             }

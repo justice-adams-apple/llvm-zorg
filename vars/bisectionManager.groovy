@@ -88,7 +88,8 @@ def initializeBisection(String goodCommit, String badCommit, String testJob,
     return bisectionManager([
         command: 'init',
         args: args,
-        repoPath: repoPath
+        repoPath: repoPath,
+        printOutput: true
     ])
 }
 
@@ -104,7 +105,8 @@ def showRestartInstructions(int stepNumber, String testJob, String repoPath = '.
     return bisectionManager([
         command: 'show-restart',
         args: [stepNumber.toString(), testJob, '--platform', 'jenkins'],
-        repoPath: repoPath
+        repoPath: repoPath,
+        printOutput: true
     ])
 }
 

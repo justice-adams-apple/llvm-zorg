@@ -1,7 +1,7 @@
 pipeline {
     agent {
         node {
-            label'macos-x86_64'
+            label 'macos-x86_64'
         }
     }
 
