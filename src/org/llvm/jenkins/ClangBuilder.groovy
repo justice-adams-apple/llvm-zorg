@@ -29,8 +29,7 @@ class ClangBuilder implements Serializable {
     def setupVenvStage() {
         script.withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
             script.sh '''
-                # Non-incremental, so always delete.
-                rm -rf clang-build clang-install host-compiler *.tar.gz
+                rm -rf clang-*.tar.gz
                 rm -rf venv
                 python3 -m venv venv
                 set +u
@@ -41,9 +40,116 @@ class ClangBuilder implements Serializable {
         }
     }
 
-    def fetchArtifactStage() {
-        script.withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
-            script.withCredentials([script.string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+def fetchArtifactStage(config = [:]) {
+    script.withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
+        script.withCredentials([script.string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
+            def isBisectionJob = script.params.BISECT == 'true'
+            def bisectionJobSuffix = "_bisect" // ToDo: Change this eventually
+
+            if (isBisectionJob) {
+                script.echo "This is a bisection job. Using git information to try and find artifact"
+                // If this is a bisection job, we need to see if the stage 1 artifact exists from either
+                // the bisection version of the job, or the regular CI job. If neither exists, we build stage1 and wait
+
+                script.sh """
+                    source ./venv/bin/activate
+                    cd llvm-project
+                    git tag -a -m "First Commit" first_commit 97724f18c79c7cc81ced24239eb5e883bf1398ef || true
+                    git_desc=\$(git describe --match "first_commit")
+                    export GIT_DISTANCE=\$(echo \${git_desc} | cut -f 2 -d "-")
+                    sha=\$(echo \${git_desc} | cut -f 3 -d "-")
+                    export GIT_SHA=\${sha:1}
+                    cd -
+                    echo "GIT_DISTANCE=\$GIT_DISTANCE" > git_info.properties
+                    echo "GIT_SHA=\$GIT_SHA" >> git_info.properties
+                """
+
+                def gitProps = script.readProperties file: 'git_info.properties'
+                def gitDistance = gitProps.GIT_DISTANCE
+                def gitSha = gitProps.GIT_SHA
+                def jobName = script.env.JOB_NAME
+
+                // Construct both artifact names
+                def primaryArtifact = "${jobName}/clang-d${gitDistance}-g${gitSha}.tar.gz"
+                def bisectArtifact = "${jobName}${bisectionJobSuffix}/clang-d${gitDistance}-g${gitSha}.tar.gz"
+
+                script.echo "Checking for primary artifact: ${primaryArtifact}"
+                script.echo "Checking for bisect artifact: ${bisectArtifact}"
+
+                // Check primary artifact first
+                def primaryFetchResult = script.sh(
+                    script: """
+                        source ./venv/bin/activate
+                        export ARTIFACT="${primaryArtifact}"
+                        echo "ARTIFACT=\$ARTIFACT"
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
+                    """,
+                    returnStatus: true
+                )
+
+                def artifactFound = false
+                def usedArtifact = ""
+
+                if (primaryFetchResult == 0) {
+                    script.echo "Primary artifact found: ${primaryArtifact}"
+                    artifactFound = true
+                    usedArtifact = primaryArtifact
+                } else {
+                    script.echo "Primary artifact not found. Checking bisect artifact: ${bisectArtifact}"
+
+                    // Check bisect artifact
+                    def bisectFetchResult = script.sh(
+                        script: """
+                            source ./venv/bin/activate
+                            export ARTIFACT="${bisectArtifact}"
+                            echo "ARTIFACT=\$ARTIFACT"
+                            python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
+                        """,
+                        returnStatus: true
+                    )
+
+                    if (bisectFetchResult == 0) {
+                        script.echo "Bisect artifact found: ${bisectArtifact}"
+                        artifactFound = true
+                        usedArtifact = bisectArtifact
+                    }
+                }
+
+                if (!artifactFound) {
+                    script.echo "Neither artifact found. Triggering stage 1 build..."
+
+                    // Trigger stage 1 job and wait for completion
+                    def stage1Build = script.build(
+                        job: config.stage1Job
+                        parameters: [
+                            script.string(name: 'GIT_SHA', value: script.params.GIT_SHA),
+                            script.string(name: 'BISECT_GOOD', value: script.params.BISECT_GOOD),
+                            script.string(name: 'BISECT_BAD', value: script.params.BISECT_BAD),
+                            script.booleanParam(name: 'IS_BISECT_JOB', value: true),
+                        ],
+                        wait: true,
+                        propagate: true
+                    )
+
+                    script.echo "Stage 1 build completed successfully. Build number: ${stage1Build.number}"
+
+                    // Retry fetching the bisection job artifact after stage 1 completes
+                    script.sh """
+                        source ./venv/bin/activate
+                        export ARTIFACT="${bisectArtifact}"
+                        echo "ARTIFACT=\$ARTIFACT"
+                        python llvm-zorg/zorg/jenkins/monorepo_build.py fetch
+                        ls \$WORKSPACE/host-compiler/lib/clang/
+                        VERSION=`ls \$WORKSPACE/host-compiler/lib/clang/`
+                    """
+                } else {
+                    script.echo "Using artifact: ${usedArtifact}"
+                    script.sh """
+                        ls \$WORKSPACE/host-compiler/lib/clang/
+                        VERSION=`ls \$WORKSPACE/host-compiler/lib/clang/`
+                    """
+                }
+            } else {
                 script.sh """
                     source ./venv/bin/activate
                     echo "ARTIFACT=${script.params.ARTIFACT}"
@@ -54,6 +160,7 @@ class ClangBuilder implements Serializable {
             }
         }
     }
+}
 
     def buildStage(config = [:]) {
         def thinlto = config.thinlto ?: false
@@ -67,6 +174,7 @@ class ClangBuilder implements Serializable {
         def noinstall = config.noinstall ?: false
         def extraCmakeFlags = config.cmake_flags ?: []
         def stage1Mode = config.stage1 ?: false
+        def incremental = config.stage1 ?: false
         def extraEnvVars = config.env_vars ?: [:]
 
         // Build environment variables map
@@ -103,8 +211,8 @@ class ClangBuilder implements Serializable {
                         cd -
                         ${stage1Mode ? 'echo "GIT_DISTANCE=\$GIT_DISTANCE" > build.properties' : ''}
                         ${stage1Mode ? 'echo "GIT_SHA=\$GIT_SHA" >> build.properties' : ''}
-                        ${stage1Mode ? 'echo "ARTIFACT=\$JOB_NAME/clang-d\$GIT_DISTANCE-g\$GIT_SHA-t\$BUILD_ID-b\$BUILD_NUMBER.tar.gz" >> build.properties' : ''}
-                        ${stage1Mode ? 'rm -rf clang-build clang-install *.tar.gz' : ''}
+                        echo "ARTIFACT=\$JOB_NAME/clang-d\$GIT_DISTANCE-g\$GIT_SHA.tar.gz" >> build.properties'
+                        ${incremental ? 'rm -rf clang-build clang-install *.tar.gz' : ''}
                         ${buildCmd}
                     """
                 }

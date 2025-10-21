@@ -9,12 +9,14 @@ library identifier: "zorg-shared-lib@${branchName}",
             ])
 
 clangPipeline([
-    jobName: 'clang-stage2-Rthinlto',
+    jobName: 'clang-stage2-Rthinlto-templated',
     buildConfig: [
         cmake_type: "RelWithDebInfo",
         thinlto: true,
         projects: "clang;clang-tools-extra;compiler-rt",
         stage: 2,
+        incremental: false,
+        stage1Job: "clang-1-RA-templated"
     ],
     testConfig: [
         test_type: "testlong",

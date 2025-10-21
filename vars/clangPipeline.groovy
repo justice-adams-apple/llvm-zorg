@@ -89,7 +89,7 @@ def call(Map config = [:]) {
                 }
                 steps {
                     script {
-                        builder.fetchArtifactStage()
+                        builder.fetchArtifactStage(buildConfig)
                     }
                 }
             }
