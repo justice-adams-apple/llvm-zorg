@@ -27,7 +27,7 @@ class ClangBuilder implements Serializable {
     }
 
     def setupVenvStage() {
-        script.withEnv(["PATH=\$PATH:/usr/bin:/usr/local/bin"]) {
+        script.withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
             script.sh '''
                 # Non-incremental, so always delete.
                 rm -rf clang-build clang-install host-compiler *.tar.gz
@@ -42,7 +42,7 @@ class ClangBuilder implements Serializable {
     }
 
     def fetchArtifactStage() {
-        script.withEnv(["PATH=\$PATH:/usr/bin:/usr/local/bin"]) {
+        script.withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
             script.withCredentials([script.string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
                 script.sh """
                     source ./venv/bin/activate
@@ -71,7 +71,7 @@ class ClangBuilder implements Serializable {
 
         // Build environment variables map
         def envVars = [
-            "PATH": "\$PATH:/usr/bin:/usr/local/bin",
+            "PATH+EXTRA": "/usr/bin:/usr/local/bin",
             "MACOSX_DEPLOYMENT_TARGET": stage1Mode ? "13.6" : null
         ]
 
@@ -184,7 +184,7 @@ class ClangBuilder implements Serializable {
         def timeout = config.test_timeout ?: 420
         def extraEnvVars = config.env_vars ?: [:]
 
-        def envVars = ["PATH": "\$PATH:/usr/bin:/usr/local/bin"]
+        def envVars = ["PATH": "$PATH:/usr/bin:/usr/local/bin"]
         extraEnvVars.each { key, value ->
             envVars[key] = value
         }
