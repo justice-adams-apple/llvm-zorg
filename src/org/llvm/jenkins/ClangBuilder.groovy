@@ -40,7 +40,7 @@ class ClangBuilder implements Serializable {
         }
     }
 
-    def fetchArtifactStage() {
+    def fetchArtifactStage(config = [:]) {
         def pythonScript = libraryResource('scripts/artifact_manager.py')
         writeFile file: 'artifact_manager.py', text: pythonScript
         sh 'chmod +x artifact_manager.py'

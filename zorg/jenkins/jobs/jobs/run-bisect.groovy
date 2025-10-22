@@ -124,7 +124,7 @@ pipeline {
                                 wait: true
                             )
 
-                            def duration = (System.currentTimeMillis() - startTime) / 1000.0
+                            def duration = ((System.currentTimeMillis() - startTime) / 1000.0) as double
 
                             // Log the job execution
                             bisectionManager.logJobExecution(
