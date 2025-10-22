@@ -50,8 +50,6 @@ jobs:
             echo "❌ TEST_JOB_NAME parameter is required"
             exit 1
           fi
-          
-          echo "✅ Parameters validated successfully"
 
       - name: Checkout main repository (for shared library)
         uses: actions/checkout@v4
@@ -83,8 +81,6 @@ jobs:
           # Copy bisection manager from shared library
           cp zorg/resources/scripts/bisect.py ./
           chmod +x bisect.py
-          
-          echo "✅ Bisection manager setup complete"
 
       - name: Initialize Bisection
         run: |
@@ -98,7 +94,7 @@ jobs:
             ${{ inputs.bad_commit }} \
             --test-job ${{ inputs.test_job_name }} \
             --repo-path ${{ inputs.repository }} \
-            $SESSION_ARG
+            $SESSION_ARG > /dev/null
 
       - name: Execute Bisection
         run: |
@@ -106,8 +102,6 @@ jobs:
           max_steps=50
           
           while [ $step_number -le $max_steps ]; do
-            echo "📍 Step $step_number of maximum $max_steps"
-            
             # Log step and get info
             step_info_json=$(python3 bisect.py log-step $step_number --repo-path ${{ inputs.repository }})
             step_type=$(echo "$step_info_json" | jq -r '.type')
@@ -132,7 +126,7 @@ jobs:
               fi
               echo "🎭 Simulated result: $simulated_result"
               
-              python3 bisect.py record $commit $simulated_result --repo-path ${{ inputs.repository }}
+              python3 bisect.py record $commit $simulated_result --repo-path ${{ inputs.repository }} > /dev/null
             else
               # Execute real job
               session_id=$(echo "$step_info_json" | jq -r '.session_id')
@@ -173,10 +167,10 @@ jobs:
                 $duration \
                 --job-url $run_url \
                 --build-number $latest_run_id \
-                --repo-path ${{ inputs.repository }}
+                --repo-path ${{ inputs.repository }} > /dev/null
               
               # Record the test result
-              python3 bisect.py record $commit $result --repo-path ${{ inputs.repository }}
+              python3 bisect.py record $commit $result --repo-path ${{ inputs.repository }} > /dev/null
             fi
             
             step_number=$((step_number + 1))
@@ -184,7 +178,7 @@ jobs:
           done
           
           if [ $step_number -gt $max_steps ]; then
-            echo "❌ Bisection exceeded maximum steps"
+            echo "Bisection exceeded maximum steps"
             exit 1
           fi
         env:
