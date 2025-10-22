@@ -19,6 +19,7 @@ def call(Map config = [:]) {
             string(name: 'BISECT_GOOD', defaultValue: params.BISECT_GOOD ?: '', description: 'Good commit for bisection')
             string(name: 'BISECT_BAD', defaultValue: params.BISECT_BAD ?: '', description: 'Bad commit for bisection')
             booleanParam(name: 'IS_BISECT_JOB', defaultValue: params.IS_BISECT_JOB ?: false, description: 'Whether clang is being built as part of a bisection job')
+            booleanParam(name: 'SKIP_TESTS', defaultValue: params.SKIP_TESTS ?: false, description: 'Skip test stage. Can be useful when rebuilding a stage 1 compiler')
         }
 
         agent {
@@ -107,7 +108,9 @@ def call(Map config = [:]) {
 
             stage('Test') {
                 when {
-                    expression { 'test' in stagesToRun }
+                    expression {
+                        'test' in stagesToRun  && !params.SKIP_TESTS
+                    }
                 }
                 steps {
                     script {
