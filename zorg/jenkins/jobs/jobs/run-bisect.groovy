@@ -18,7 +18,11 @@ pipeline {
     parameters {
         string(name: 'GOOD_COMMIT', description: 'Known good commit SHA', defaultValue: '')
         string(name: 'BAD_COMMIT', description: 'Known bad commit SHA', defaultValue: '')
-        string(name: 'TEST_JOB_NAME', description: 'Job to execute for testing each commit', defaultValue: 'llvm-build')
+        choice(
+            name: 'TEST_JOB_NAME',
+            choices: ['clang-stage2-Rthinlto-templated'],
+            description: 'Job to execute for testing each commit'
+        )
         choice(
             name: 'REPOSITORY',
             choices: ['llvm-project'],
@@ -108,14 +112,13 @@ pipeline {
                             // Execute real job
                             def startTime = System.currentTimeMillis()
 
-                            // ToDo: Trigger the job we need
                             def jobResult = build(
                                 job: params.TEST_JOB_NAME,
                                 parameters: [
                                     string(name: 'GIT_SHA', value: stepInfo.commit),
-                                    string(name: 'BISECT_SESSION_ID', value: stepInfo.session_id),
-                                    string(name: 'BISECT_STEP', value: stepNumber.toString()),
-                                    string(name: 'REPOSITORY', value: params.REPOSITORY)
+                                    string(name: 'BISECT_GOOD', value: stepInfo.bisection_range.current_good),
+                                    string(name: 'BISECT_BAD', value: stepInfo.bisection_range.current_bad),
+                                    booleanParam(name: 'IS_BISECT_JOB', value: true)
                                 ],
                                 propagate: false,
                                 wait: true
