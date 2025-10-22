@@ -90,6 +90,7 @@ class ClangBuilder implements Serializable {
                             script.string(name: 'BISECT_GOOD', value: script.params.BISECT_GOOD),
                             script.string(name: 'BISECT_BAD', value: script.params.BISECT_BAD),
                             script.booleanParam(name: 'IS_BISECT_JOB', value: true),
+                            script.booleanParam(name: 'SKIP_TESTS', value: true),
                         ],
                         wait: true,
                         propagate: true

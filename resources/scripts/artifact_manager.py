@@ -155,7 +155,7 @@ class ArtifactManager:
 
         # Neither found, need stage 1 build
         logger.info("No artifacts found, stage 1 build needed")
-        return False, primary_artifact, True
+        return False, templated_artifact, True
 
 
 def main():
