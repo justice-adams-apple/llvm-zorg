@@ -62,9 +62,17 @@ class ArtifactManager:
         """Construct primary and templated artifact names."""
         base_name = f"clang-d{git_distance}-g{git_sha}.tar.gz"
 
-        primary_artifact = f"{job_name}/{base_name}"
-        # ToDo: This -templated suffix will likely change
-        templated_artifact = f"{job_name}-templated/{base_name}"
+        # Define the templated suffix
+        templated_suffix = '-templated'  # ToDo: This suffix will likely change
+
+        # Remove templated suffix from job name for primary artifact
+        if job_name.endswith(templated_suffix):
+            primary_job_name = job_name[:-len(templated_suffix)]
+        else:
+            primary_job_name = job_name
+
+        primary_artifact = f"{primary_job_name}/{base_name}"
+        templated_artifact = f"{job_name}/{base_name}"
 
         return primary_artifact, templated_artifact
 
