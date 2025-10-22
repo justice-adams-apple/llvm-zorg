@@ -17,6 +17,10 @@ class BisectionManager:
         self.bisection_log = self.workspace_dir / "bisection.log"
         self.restart_log = self.workspace_dir / "restart_instructions.log"
 
+    def _print(self, message: str) -> None:
+        """Print non-JSON output to stderr so it appears in CI logs"""
+        print(message, file=sys.stderr)
+
     def initialize_bisection(self, good_commit: str, bad_commit: str,
                              test_job: Optional[str] = None, session_id: Optional[str] = None,
                              verbose: bool = True) -> Dict[str, Any]:
@@ -57,11 +61,11 @@ class BisectionManager:
 
         if verbose:
             session_type = "CONTINUED" if session_id else "STARTED"
-            print(f"Initializing bisection...")
+            self._print(f"Initializing bisection...")
             if session_id:
-                print(f"Continuing session: {session_id}")
-            print(f"Session ID: {state['session_id']}")
-            print(f"Total commits in range: {len(commits)}, estimated {estimated_steps} steps")
+                self._print(f"Continuing session: {session_id}")
+            self._print(f"Session ID: {state['session_id']}")
+            self._print(f"Total commits in range: {len(commits)}, estimated {estimated_steps} steps")
 
             # Initialize log files
             self._initialize_logs(state, test_job, session_type)
@@ -95,13 +99,13 @@ class BisectionManager:
         """Log the start of a bisection step and return step info"""
         step_info = self.get_next_step_info()
 
-        print(f"\n{'=' * 60}")
-        print(f"🔍 BISECTION STEP {step_number}")
-        print(f"{'=' * 60}")
+        self._print(f"\n{'=' * 60}")
+        self._print(f"🔍 BISECTION STEP {step_number}")
+        self._print(f"{'=' * 60}")
 
         if step_info['type'] == 'complete':
-            print("🎉 BISECTION COMPLETE!")
-            print(f"First bad commit: {step_info['failing_commit']}")
+            self._print("🎉 BISECTION COMPLETE!")
+            self._print(f"First bad commit: {step_info['failing_commit']}")
 
             log_entry = f"""
 STEP {step_number}: BISECTION COMPLETE
@@ -117,12 +121,12 @@ Completed at: {datetime.now().isoformat()}
         commit_info = step_info['commit_info']
         progress = step_info['progress']
 
-        print(f"Testing commit: {commit}")
-        print(f"Author: {commit_info['author']}")
-        print(f"Date: {commit_info['date']}")
-        print(f"Subject: {commit_info['subject']}")
-        print(f"Progress: {progress['completed_steps']}/{progress['total_steps']} ({progress['percentage']}%)")
-        print(f"Remaining: {progress['remaining_commits']} commits, ~{progress['remaining_steps']} steps")
+        self._print(f"Testing commit: {commit}")
+        self._print(f"Author: {commit_info['author']}")
+        self._print(f"Date: {commit_info['date']}")
+        self._print(f"Subject: {commit_info['subject']}")
+        self._print(f"Progress: {progress['completed_steps']}/{progress['total_steps']} ({progress['percentage']}%)")
+        self._print(f"Remaining: {progress['remaining_commits']} commits, ~{progress['remaining_steps']} steps")
 
         # Log this step
         log_entry = f"""
@@ -151,28 +155,28 @@ Range: {step_info['bisection_range']['current_good']}..{step_info['bisection_ran
         commit = step_info['commit']
         commit_info = step_info['commit_info']
 
-        print("\n🔄 RESTART INSTRUCTIONS:")
-        print("┌─────────────────────────────────────────────────────────────────────────────┐")
-        print("│ 🔄 TO RESTART FROM THIS STEP IF JOB FAILS:                                  │")
-        print("│                                                                             │")
+        self._print("\n🔄 RESTART INSTRUCTIONS:")
+        self._print("┌─────────────────────────────────────────────────────────────────────────────┐")
+        self._print("│ 🔄 TO RESTART FROM THIS STEP IF JOB FAILS:                                  │")
+        self._print("│                                                                             │")
 
         if platform == "jenkins":
-            print("│ Run this job again with parameters:                                         │")
-            print(f"│   GOOD_COMMIT: {current_good:<50} │")
-            print(f"│   BAD_COMMIT: {current_bad:<51} │")
-            print(f"│   SESSION_ID: {session_id:<52} │")
-            print(f"│   TEST_JOB_NAME: {test_job:<48} │")
+            self._print("│ Run this job again with parameters:                                         │")
+            self._print(f"│   GOOD_COMMIT: {current_good:<50} │")
+            self._print(f"│   BAD_COMMIT: {current_bad:<51} │")
+            self._print(f"│   SESSION_ID: {session_id:<52} │")
+            self._print(f"│   TEST_JOB_NAME: {test_job:<48} │")
         else:  # github actions
-            print("│ Run this workflow again with parameters:                                   │")
-            print(f"│   good_commit: {current_good:<50} │")
-            print(f"│   bad_commit: {current_bad:<51} │")
-            print(f"│   session_id: {session_id:<52} │")
-            print(f"│   test_workflow: {test_job:<48} │")
+            self._print("│ Run this workflow again with parameters:                                   │")
+            self._print(f"│   good_commit: {current_good:<50} │")
+            self._print(f"│   bad_commit: {current_bad:<51} │")
+            self._print(f"│   session_id: {session_id:<52} │")
+            self._print(f"│   test_workflow: {test_job:<48} │")
 
-        print("│                                                                             │")
-        print(f"│ This will continue testing from commit: {commit[:20]:<20}          │")
-        print(f"│ ({commit_info['subject'][:50]:<50})                                          │")
-        print("└─────────────────────────────────────────────────────────────────────────────┘")
+        self._print("│                                                                             │")
+        self._print(f"│ This will continue testing from commit: {commit[:20]:<20}          │")
+        self._print(f"│ ({commit_info['subject'][:50]:<50})                                          │")
+        self._print("└─────────────────────────────────────────────────────────────────────────────┘")
 
         # Log restart instructions
         self._log_restart_instructions(step_number, current_good, current_bad,
@@ -182,10 +186,10 @@ Range: {step_info['bisection_range']['current_good']}..{step_info['bisection_ran
                           job_url: Optional[str] = None, build_number: Optional[str] = None) -> None:
         """Log job execution results"""
 
-        print(f" Job result: {result}")
-        print(f"️  Duration: {duration:.1f}s")
+        self._print(f"📊 Job result: {result}")
+        self._print(f"⏱️  Duration: {duration:.1f}s")
         if job_url:
-            print(f" Job URL: {job_url}")
+            self._print(f"🔗 Job URL: {job_url}")
 
         log_entry = f"   Job: {job_name}"
         if build_number:
@@ -223,11 +227,11 @@ Range: {step_info['bisection_range']['current_good']}..{step_info['bisection_ran
         if is_good:
             # This commit is good, so the failure is in later commits
             state["current_good"] = commit
-            print(f"Commit {commit} is GOOD - failure is in later commits")
+            self._print(f"✅ Commit {commit} is GOOD - failure is in later commits")
         else:
             # This commit is bad, so the failure is in earlier commits
             state["current_bad"] = commit
-            print(f"Commit {commit} is BAD - failure is in earlier commits")
+            self._print(f"❌ Commit {commit} is BAD - failure is in earlier commits")
 
         # Update what to test next
         self._update_next_action(state)
@@ -238,14 +242,14 @@ Range: {step_info['bisection_range']['current_good']}..{step_info['bisection_ran
     def generate_final_report(self) -> Dict[str, Any]:
         """Generate comprehensive final report"""
 
-        print(f"\n{'=' * 60}")
-        print("📋 GENERATING FINAL REPORT")
-        print(f"{'=' * 60}")
+        self._print(f"\n{'=' * 60}")
+        self._print("📋 GENERATING FINAL REPORT")
+        self._print(f"{'=' * 60}")
 
         step_info = self.get_next_step_info()
 
         if step_info['type'] != 'complete':
-            print("⚠️  Bisection did not complete successfully")
+            self._print("⚠️  Bisection did not complete successfully")
             report_text = "Bisection did not complete successfully. See bisection.log for details."
             with open(self.workspace_dir / "bisection_final_report.txt", 'w') as f:
                 f.write(report_text)
@@ -296,7 +300,7 @@ TEST RESULTS SUMMARY:
         # Also append to the log
         self._append_to_log(self.bisection_log, report)
 
-        print(report.strip())
+        self._print(report.strip())
 
         return {
             'type': 'complete',
@@ -308,25 +312,25 @@ TEST RESULTS SUMMARY:
     def display_summary(self) -> None:
         """Display final bisection summary"""
 
-        print(f"\n{'=' * 60}")
-        print("📊 BISECTION SUMMARY")
-        print(f"{'=' * 60}")
+        self._print(f"\n{'=' * 60}")
+        self._print("📊 BISECTION SUMMARY")
+        self._print(f"{'=' * 60}")
 
         try:
             step_info = self.get_next_step_info()
             state = step_info['state']
 
-            print(f"Status: {state['status']}")
-            print(f"Steps completed: {state['completed_steps']}")
+            self._print(f"Status: {state['status']}")
+            self._print(f"Steps completed: {state['completed_steps']}")
 
             if step_info['type'] == 'complete':
-                print("✅ SUCCESS: First bad commit identified")
-                print(f"Failing commit: {step_info['failing_commit']}")
+                self._print("✅ SUCCESS: First bad commit identified")
+                self._print(f"Failing commit: {step_info['failing_commit']}")
             else:
-                print("❌ Bisection incomplete")
+                self._print("❌ Bisection incomplete")
 
         except Exception as e:
-            print(f"Could not load bisection state: {e}")
+            self._print(f"Could not load bisection state: {e}")
 
     def get_current_state(self) -> Dict[str, Any]:
         """Get the current bisection state"""
@@ -350,10 +354,10 @@ TEST RESULTS SUMMARY:
         """Get basic information about a commit"""
         try:
             result = subprocess.run([
-                "git", "show", "-s", "--format=%an|%ad|%s", commit
+                "git", "show", "-s", "--format=%an%x2C%ad%x2C%s", commit
             ], cwd=self.repo_path, capture_output=True, text=True, check=True)
 
-            parts = result.stdout.strip().split('|', 2)
+            parts = result.stdout.strip().split(',', 2)
             return {
                 "author": parts[0] if len(parts) > 0 else "Unknown",
                 "date": parts[1] if len(parts) > 1 else "Unknown",
