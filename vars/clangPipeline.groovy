@@ -90,7 +90,9 @@ def call(Map config = [:]) {
                 }
                 steps {
                     script {
-                        builder.fetchArtifactStage(buildConfig)
+                        fetchArtifact([
+                            stage1Job: buildConfig.stage1Job
+                        ])
                     }
                 }
             }
