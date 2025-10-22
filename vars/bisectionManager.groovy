@@ -24,48 +24,21 @@ def call(Map params) {
             cmdLine += " ${args.join(' ')}"
         }
 
+        // Execute command - stderr goes to Jenkins console automatically,
+        // stdout contains JSON (if any)
         def result = sh(script: cmdLine, returnStdout: true).trim()
 
-        // Look for JSON in the output (starts with { or [)
-        def jsonStart = -1
-        def lines = result.split('\n')
-
-        for (int i = 0; i < lines.length; i++) {
-            def line = lines[i]
-            if (line.startsWith('{') || (line.startsWith('[') && line.length() > 10 && line.contains('"'))) {
-                jsonStart = i
-                break
-            }
-        }
-
-        // Print only non-JSON output
-        if (jsonStart >= 0) {
-            // Print only the lines before JSON starts
-            def textLines = lines[0..<jsonStart]
-            def textOutput = textLines.join('\n').trim()
-            if (textOutput) {
-                echo textOutput
-            }
-        } else {
-            // No JSON found, print everything
-            echo result
-        }
-
-        if (jsonStart >= 0) {
-            // Extract JSON part
-            def jsonLines = lines[jsonStart..-1]
-            def jsonText = jsonLines.join('\n')
-
+        // Check if we got JSON output
+        if (result && (result.startsWith('{') || result.startsWith('['))) {
             try {
-                return readJSON(text: jsonText)
+                return readJSON(text: result)
             } catch (Exception e) {
-                echo "Warning: Failed to parse JSON: ${e.message}"
-                echo "JSON text was: ${jsonText}"
+                echo "Warning: Failed to parse JSON output: ${e.message}"
+                echo "Raw output was: ${result}"
                 return [output: result]
             }
         } else {
-            // No JSON found, return as text output
-            return [output: result]
+            return [success: true]
         }
     } finally {
         // Keep the script for debugging but don't fail if cleanup fails
