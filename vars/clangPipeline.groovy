@@ -123,6 +123,13 @@ def call(Map config = [:]) {
         post {
             always {
                 script {
+                    def Junit = new org.swift.Junit()
+                    // Todo: Make this configurable
+                    Junit.safeJunit([
+                        allowEmptyResults: true,
+                        testResults: "clang-build/**/testresults.xunit.xml"
+                    ])
+
                     builder.cleanupStage()
                 }
             }
