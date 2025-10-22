@@ -12,10 +12,10 @@ clangPipeline([
     jobName: 'clang-stage1-RA-templated',
     buildConfig: [
         cmake_type: "RelWithDebInfo",
-        thinlto: true,
         projects: "clang;clang-tools-extra;compiler-rt",
         stage: 1,
         incremental: false,
+        assertions: true
     ],
     testConfig: [
         test_type: "testlong",
