@@ -243,7 +243,7 @@ class ClangBuilder implements Serializable {
         def timeout = config.test_timeout ?: 420
         def extraEnvVars = config.env_vars ?: [:]
 
-        def envVars = ["PATH": "$PATH:/usr/bin:/usr/local/bin"]
+        def envVars = ["PATH+EXTRA": "/usr/bin:/usr/local/bin"]
         extraEnvVars.each { key, value ->
             envVars[key] = value
         }
