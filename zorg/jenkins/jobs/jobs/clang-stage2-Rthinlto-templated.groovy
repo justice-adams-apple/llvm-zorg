@@ -16,7 +16,7 @@ clangPipeline([
         projects: "clang;clang-tools-extra;compiler-rt",
         stage: 2,
         incremental: false,
-        stage1Job: "clang-1-RA-templated"
+        stage1Job: "clang-stage1-RA-templated"
     ],
     testConfig: [
         test_type: "testlong",

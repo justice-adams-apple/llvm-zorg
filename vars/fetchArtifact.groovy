@@ -35,8 +35,6 @@ def call(Map config = [:]) {
             def usedArtifact = resultProps.USED_ARTIFACT
             def needsStage1 = resultProps.NEEDS_STAGE1 == 'true'
 
-            echo "Checking for stage 1 results - found: ${artifactFound}, Used: ${usedArtifact}, Needs Stage1: ${needsStage1}"
-
             if (needsStage1) {
                 echo "Triggering stage 1 build for artifact: ${usedArtifact}"
 
