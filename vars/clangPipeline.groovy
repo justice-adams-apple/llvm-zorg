@@ -13,13 +13,13 @@ def call(Map config = [:]) {
         }
 
         parameters {
-            string(name: 'LABEL', defaultValue: params.LABEL ?: 'macos-x86_64', description: 'Node label to run on')
-            string(name: 'GIT_SHA', defaultValue: params.GIT_REVISION ?: '*/main', description: 'Git commit to build.')
-            string(name: 'ARTIFACT', defaultValue: params.ARTIFACT ?: '', description: 'Clang artifact to use if this is a stage2 job')
-            string(name: 'BISECT_GOOD', defaultValue: params.BISECT_GOOD ?: '', description: 'Good commit for bisection')
-            string(name: 'BISECT_BAD', defaultValue: params.BISECT_BAD ?: '', description: 'Bad commit for bisection')
-            booleanParam(name: 'IS_BISECT_JOB', defaultValue: params.IS_BISECT_JOB ?: false, description: 'Whether clang is being built as part of a bisection job')
-            booleanParam(name: 'SKIP_TESTS', defaultValue: params.SKIP_TESTS ?: false, description: 'Skip test stage. Can be useful when rebuilding a stage 1 compiler')
+            string(name: 'LABEL', defaultValue: 'macos-x86_64', description: 'Node label to run on')
+            string(name: 'GIT_SHA', defaultValue: '*/main', description: 'Git commit to build.')
+            string(name: 'ARTIFACT', defaultValue: '', description: 'Clang artifact to use if this is a stage2 job')
+            string(name: 'BISECT_GOOD', defaultValue: '', description: 'Good commit for bisection')
+            string(name: 'BISECT_BAD', defaultValue: '', description: 'Bad commit for bisection')
+            booleanParam(name: 'IS_BISECT_JOB', defaultValue: false, description: 'Whether clang is being built as part of a bisection job')
+            booleanParam(name: 'SKIP_TESTS', defaultValue: false, description: 'Skip test stage. Can be useful when rebuilding a stage 1 compiler')
         }
 
         agent {
