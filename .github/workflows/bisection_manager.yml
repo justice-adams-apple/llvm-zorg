@@ -56,7 +56,6 @@ jobs:
       - name: Checkout main repository (for shared library)
         uses: actions/checkout@v4
         with:
-          ref: jadams/shared-library #ToDo: This will change
           fetch-depth: 0
           path: zorg
 
@@ -82,8 +81,8 @@ jobs:
       - name: Setup Python and Bisection Manager
         run: |
           # Copy bisection manager from shared library
-          cp zorg/resources/scripts/bisection_manager.py ./
-          chmod +x bisection_manager.py
+          cp zorg/resources/scripts/bisect.py ./
+          chmod +x bisect.py
           
           echo "✅ Bisection manager setup complete"
 
@@ -94,7 +93,7 @@ jobs:
             SESSION_ARG="--session-id ${{ inputs.session_id }}"
           fi
           
-          python3 bisection_manager.py init \
+          python3 bisect.py init \
             ${{ inputs.good_commit }} \
             ${{ inputs.bad_commit }} \
             --test-job ${{ inputs.test_job_name }} \
@@ -110,7 +109,7 @@ jobs:
             echo "📍 Step $step_number of maximum $max_steps"
             
             # Log step and get info
-            step_info_json=$(python3 bisection_manager.py log-step $step_number --repo-path ${{ inputs.repository }})
+            step_info_json=$(python3 bisect.py log-step $step_number --repo-path ${{ inputs.repository }})
             step_type=$(echo "$step_info_json" | jq -r '.type')
             
             if [ "$step_type" = "complete" ]; then
@@ -120,7 +119,7 @@ jobs:
             fi
             
             # Show restart instructions
-            python3 bisection_manager.py show-restart $step_number ${{ inputs.test_job_name }} --platform github --repo-path ${{ inputs.repository }}
+            python3 bisect.py show-restart $step_number ${{ inputs.test_job_name }} --platform github --repo-path ${{ inputs.repository }}
             
             commit=$(echo "$step_info_json" | jq -r '.commit')
             
@@ -133,7 +132,7 @@ jobs:
               fi
               echo "🎭 Simulated result: $simulated_result"
               
-              python3 bisection_manager.py record $commit $simulated_result --repo-path ${{ inputs.repository }}
+              python3 bisect.py record $commit $simulated_result --repo-path ${{ inputs.repository }}
             else
               # Execute real job
               session_id=$(echo "$step_info_json" | jq -r '.session_id')
@@ -168,7 +167,7 @@ jobs:
               fi
               
               # Log the job execution
-              python3 bisection_manager.py log-job \
+              python3 bisect.py log-job \
                 ${{ inputs.test_job_name }} \
                 $result \
                 $duration \
@@ -177,7 +176,7 @@ jobs:
                 --repo-path ${{ inputs.repository }}
               
               # Record the test result
-              python3 bisection_manager.py record $commit $result --repo-path ${{ inputs.repository }}
+              python3 bisect.py record $commit $result --repo-path ${{ inputs.repository }}
             fi
             
             step_number=$((step_number + 1))
@@ -193,12 +192,12 @@ jobs:
 
       - name: Generate Final Report
         run: |
-          python3 bisection_manager.py final-report --repo-path ${{ inputs.repository }}
+          python3 bisect.py final-report --repo-path ${{ inputs.repository }}
 
       - name: Display Summary
         if: always()
         run: |
-          python3 bisection_manager.py summary --repo-path ${{ inputs.repository }}
+          python3 bisect.py summary --repo-path ${{ inputs.repository }}
 
       - name: Upload Artifacts
         if: always()
@@ -214,4 +213,4 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          rm -f bisection_manager.py
+          rm -f bisect.py
