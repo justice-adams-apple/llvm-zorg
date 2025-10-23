@@ -104,7 +104,7 @@ class ClangBuilder implements Serializable {
         def runtimes = config.runtimes ?: ""
         def cmakeType = config.cmake_type ?: "RelWithDebInfo"
         def assertions = config.assertions ?: false
-        def timeout = config.timeout ?: 120
+        def timeout = config.timeout ?: ""
         def buildTarget = config.build_target ?: ""
         def noinstall = config.noinstall ?: false
         def thinlto = config.thinlto ?: false
@@ -127,7 +127,7 @@ class ClangBuilder implements Serializable {
             cmd += " --assertions"
         }
 
-        if (timeout != 2400) {
+        if (timeout) {
             cmd += " --timeout=${timeout}"
         }
 
@@ -140,7 +140,7 @@ class ClangBuilder implements Serializable {
         }
 
         def cmakeFlags = []
-        cmakeFlags.add("-DPython3_Executable=\$(which python)")
+        cmakeFlags.add("-DPython3_EXECUTABLE=\$(which python)")
 
         if (thinlto) {
             cmakeFlags.add("-DLLVM_ENABLE_LTO=Thin")
