@@ -5,7 +5,7 @@ def call(Map config = [:]) {
 
     withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
         withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
-            def jobName = env.JOB_NAME
+            def jobName = config.stage1Job
             def isBisectionJob = params.BISECT == 'true'
 
             // Determine artifact parameter
