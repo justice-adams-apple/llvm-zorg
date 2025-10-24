@@ -51,8 +51,8 @@ class ClangBuilder implements Serializable {
         def buildTarget = config.build_target ?: ""
         def noinstall = config.noinstall ?: false
         def extraCmakeFlags = config.cmake_flags ?: []
-        def stage1Mode = config.stage1 ?: false
-        def incremental = config.stage1 ?: false
+        def stage1Mode = config.stage == 1
+        def incremental = config.incremental
         def extraEnvVars = config.env_vars ?: [:]
 
         // Build environment variables map
@@ -170,7 +170,7 @@ class ClangBuilder implements Serializable {
         def timeout = config.test_timeout ?: 420
         def extraEnvVars = config.env_vars ?: [:]
 
-        def envVars = ["PATH+EXTRA": "/usr/bin:/usr/local/bin"]
+        def envVars = ["PATH": "${script.env.PATH}:/usr/bin:/usr/local/bin"]
         extraEnvVars.each { key, value ->
             envVars[key] = value
         }
