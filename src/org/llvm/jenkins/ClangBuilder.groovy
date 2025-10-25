@@ -19,9 +19,9 @@ class ClangBuilder implements Serializable {
         script.dir('llvm-zorg') {
             script.checkout([
                 $class: 'GitSCM',
-                branches: [[name: '*/main']],
-                extensions: [[$class: 'CloneOption', reference: '/Users/Shared/llvm-zorg.git']],
-                userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-zorg.git']]
+                branches: [[name: 'jadams/shared-library']], //ToDo: This will go away with the global shared library
+//                 extensions: [[$class: 'CloneOption', reference: '/Users/Shared/llvm-zorg.git']],
+                userRemoteConfigs: [[url: 'https://github.com/justice-adams-apple/llvm-zorg.git']]
             ])
         }
     }
