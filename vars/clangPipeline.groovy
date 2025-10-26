@@ -66,7 +66,9 @@ def call(Map config = [:]) {
                 }
                 steps {
                     script {
-                        builder.checkoutStage()
+                        retry(3) {
+                            builder.checkoutStage()
+                        }
                     }
                 }
             }
