@@ -11,12 +11,17 @@ library identifier: "zorg-shared-lib@${branchName}",
 clangPipeline([
     jobName: 'clang-stage2-Rthinlto-templated',
     buildConfig: [
+        build_type: "clang",
         cmake_type: "RelWithDebInfo",
         thinlto: true,
-        projects: "clang;clang-tools-extra;compiler-rt",
+        projects: "clang;compiler-rt",
+        runtimes: "libunwind",
         stage: 2,
         incremental: false,
-        stage1Job: "clang-stage1-RA-templated"
+        stage1Job: "clang-stage1-RA-templated",
+        cmake_flags: [
+            "-DCMAKE_DSYMUTIL=\${WORKSPACE}/host-compiler/bin/dsymutil"
+        ]
     ],
     testConfig: [
         test_type: "testlong",

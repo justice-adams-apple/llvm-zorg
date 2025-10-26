@@ -99,7 +99,7 @@ class ClangBuilder implements Serializable {
     }
 
     def buildMonorepoBuildCommand(config) {
-        def testCommand = config.test_command ?: "cmake"
+        def build_type = config.build_type ?: "cmake"
         def projects = config.projects ?: "clang;clang-tools-extra;compiler-rt"
         def runtimes = config.runtimes ?: ""
         def cmakeType = config.cmake_type ?: "RelWithDebInfo"
@@ -111,7 +111,7 @@ class ClangBuilder implements Serializable {
         def sanitizer = config.sanitizer ?: ""
         def extraCmakeFlags = config.cmake_flags ?: []
 
-        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${testCommand} build"
+        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${build_type} build"
 
         if (cmakeType != "default") {
             cmd += " --cmake-type=${cmakeType}"
@@ -143,7 +143,11 @@ class ClangBuilder implements Serializable {
         cmakeFlags.add("-DPython3_EXECUTABLE=\$(which python)")
 
         if (thinlto) {
-            cmakeFlags.add("-DLLVM_ENABLE_LTO=Thin")
+            if (build_type == "cmake") {
+                cmakeFlags.add("-DLLVM_ENABLE_LTO=Thin")
+            } else {
+                cmd += " --thinlto"
+            }
         }
 
         if (sanitizer) {
