@@ -104,7 +104,7 @@ class ClangBuilder implements Serializable {
         def runtimes = config.runtimes ?: ""
         def cmakeType = config.cmake_type ?: "RelWithDebInfo"
         def assertions = config.assertions ?: false
-        def timeout = config.timeout ?: ""
+        def testTimeout = config.test_timeout ?: ""
         def buildTarget = config.build_target ?: ""
         def noinstall = config.noinstall ?: false
         def thinlto = config.thinlto ?: false
@@ -127,8 +127,8 @@ class ClangBuilder implements Serializable {
             cmd += " --assertions"
         }
 
-        if (timeout) {
-            cmd += " --timeout=${timeout}"
+        if (testTimeout) {
+            cmd += " --timeout=${testTimeout}"
         }
 
         if (buildTarget) {
@@ -171,7 +171,7 @@ class ClangBuilder implements Serializable {
         def testCommand = config.test_command ?: "cmake"
         def testType = config.test_type ?: "testlong"
         def testTargets = config.test_targets ?: []
-        def timeout = config.test_timeout ?: 420
+        def timeout = config.timeout ?: 420
         def extraEnvVars = config.env_vars ?: [:]
 
         def envVars = ["PATH": "${script.env.PATH}:/usr/bin:/usr/local/bin"]

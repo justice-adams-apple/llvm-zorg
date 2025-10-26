@@ -19,6 +19,6 @@ clangPipeline([
     ],
     testConfig: [
         test_type: "testlong",
-        test_timeout: 600
+        timeout: 120
     ]
 ])

@@ -17,6 +17,7 @@ clangPipeline([
         projects: "clang;compiler-rt",
         runtimes: "libunwind",
         stage: 2,
+        timeout: 1200,
         incremental: false,
         stage1Job: "clang-stage1-RA-templated",
         cmake_flags: [
@@ -25,6 +26,6 @@ clangPipeline([
     ],
     testConfig: [
         test_type: "testlong",
-        test_timeout: 600
+        timeout: 420
     ]
 ])
