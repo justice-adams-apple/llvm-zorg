@@ -25,7 +25,8 @@ clangPipeline([
         ]
     ],
     testConfig: [
-        test_type: "testlong",
+        test_command: "clang",
+        test_type: "test",
         timeout: 420
     ]
 ])
