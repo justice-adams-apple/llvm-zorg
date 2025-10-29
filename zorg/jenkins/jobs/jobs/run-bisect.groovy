@@ -20,7 +20,7 @@ pipeline {
         string(name: 'BAD_COMMIT', description: 'Known bad commit SHA', defaultValue: '')
         choice(
             name: 'TEST_JOB_NAME',
-            choices: ['clang-stage2-Rthinlto-templated'],
+            choices: ['clang-stage2-Rthinlto-templated', 'clang-stage1-RA-templated'],
             description: 'Job to execute for testing each commit'
         )
         choice(
