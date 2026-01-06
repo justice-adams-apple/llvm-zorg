@@ -8,9 +8,15 @@ def call(Map config = [:]) {
     def stagesToRun = config.stages ?: ['checkout', 'fetch', 'build', 'test']
     def jobName = config.jobName
 
+    if (!params.IS_BISECT_JOB) {
+        properties([
+            disableConcurrentBuilds()
+        ])
+    }
+
     pipeline {
         options {
-            disableConcurrentBuilds()
+            skipDefaultCheckout()
         }
 
         parameters {

@@ -18,7 +18,7 @@ class ClangBuilder implements Serializable {
                     userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
                 ])
             } else {
-                // Multibranch pipeline - use the SCM configuration from the job
+                // Multibranch pipeline - use the SCM configuration from the job which includes timeout
                 script.checkout(script.scm)
             }
         }
