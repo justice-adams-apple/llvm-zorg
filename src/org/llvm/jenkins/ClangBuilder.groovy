@@ -110,13 +110,13 @@ class ClangBuilder implements Serializable {
         def cmakeType = config.cmake_type ?: "RelWithDebInfo"
         def assertions = config.assertions ?: false
         def testTimeout = config.test_timeout ?: ""
-        def buildTarget = config.build_target ?: "build"
+        def buildTarget = config.build_target ?:  ""
         def noinstall = config.noinstall ?: false
         def thinlto = config.thinlto ?: false
         def sanitizer = config.sanitizer ?: ""
         def extraCmakeFlags = config.cmake_flags ?: []
 
-        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${build_type} ${buildTarget}"
+        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${build_type} build"
 
         if (cmakeType != "default") {
             cmd += " --cmake-type=${cmakeType}"
