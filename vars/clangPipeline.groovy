@@ -76,7 +76,17 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         def buildType = params.IS_BISECT_JOB ? "🔍 BISECTION TEST" : "🔧 NORMAL BUILD"
-                        def commitInfo = env.GIT_COMMIT ? env.GIT_COMMIT.take(8) : 'unknown'
+                        def commitInfo
+                        if (params.IS_BISECT_JOB) {
+                            commitInfo = params.GIT_SHA ? params.GIT_SHA.take(8) : 'unknown'
+                        } else if ('checkout' in stagesToRun) {
+                            commitInfo = sh(
+                                script: 'cd llvm-project && git rev-parse --short=8 HEAD',
+                                returnStdout: true
+                            ).trim()
+                        } else {
+                            commitInfo = ''
+                        }
 
                         if (params.IS_BISECT_JOB && params.BISECT_GOOD && params.BISECT_BAD) {
                             def goodShort = params.BISECT_GOOD.take(8)
@@ -85,8 +95,8 @@ def call(Map config = [:]) {
                         } else {
                             currentBuild.description = "${buildType}: ${commitInfo}"
                         }
-
                         echo "Build Type: ${buildType}"
+                        echo "Commit: ${commitInfo}"
                     }
                 }
             }
