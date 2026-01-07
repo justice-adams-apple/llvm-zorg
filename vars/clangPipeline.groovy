@@ -143,7 +143,7 @@ def call(Map config = [:]) {
                             testResults: pattern
                         ])
                     }
-                    builder.cleanupStage()
+                    builder.cleanupStage(buildConfig)
                 }
             }
             success {
