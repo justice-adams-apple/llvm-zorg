@@ -20,7 +20,7 @@ def call(Map config = [:]) {
         }
 
         parameters {
-            string(name: 'LABEL', defaultValue: config.defaultLabel ?: 'macos-x86_64', description: 'Node label to run on')
+            string(name: 'LABEL', defaultValue: config.defaultLabel ?: 'macos-x86_64_temp', description: 'Node label to run on')
             string(name: 'GIT_SHA', defaultValue: '', description: 'Git commit to build.')
             string(name: 'ARTIFACT', defaultValue: '', description: 'Clang artifact to use if this is a stage2 job')
             string(name: 'BISECT_GOOD', defaultValue: '', description: 'Good commit for bisection')
