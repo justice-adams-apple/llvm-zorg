@@ -95,7 +95,7 @@ class ClangBuilder implements Serializable {
                         ${stage1Mode ? 'echo "GIT_DISTANCE=\$GIT_DISTANCE" > build.properties' : ''}
                         ${stage1Mode ? 'echo "GIT_SHA=\$GIT_SHA" >> build.properties' : ''}
                         echo "ARTIFACT=\$JOB_NAME/clang-d\$GIT_DISTANCE-g\$GIT_SHA.tar.gz" >> build.properties
-                        ${incremental ? 'rm -rf clang-build clang-install *.tar.gz' : ''}
+                        ${incremental ? '' : 'rm -rf clang-build clang-install *.tar.gz'}
                         ${buildCmd}
                     """
                 }
