@@ -46,16 +46,7 @@ class ClangBuilder implements Serializable {
     }
 
     def buildStage(config = [:]) {
-        def thinlto = config.thinlto ?: false
-        def cmakeType = config.cmake_type ?: "RelWithDebInfo"
-        def projects = config.projects ?: "clang;clang-tools-extra;compiler-rt"
-        def runtimes = config.runtimes ?: ""
-        def sanitizer = config.sanitizer ?: ""
-        def assertions = config.assertions ?: false
         def timeout = config.timeout ?: 120
-        def buildTarget = config.build_target ?: ""
-        def noinstall = config.noinstall ?: false
-        def extraCmakeFlags = config.cmake_flags ?: []
         def stage1Mode = config.stage == 1
         def incremental = config.incremental
         def extraEnvVars = config.env_vars ?: [:]
@@ -104,19 +95,20 @@ class ClangBuilder implements Serializable {
     }
 
     def buildMonorepoBuildCommand(config) {
-        def build_type = config.build_type ?: "cmake"
+        def buildType = config.build_type ?: "cmake"
         def projects = config.projects ?: ""
         def runtimes = config.runtimes ?: ""
         def cmakeType = config.cmake_type ?: "RelWithDebInfo"
         def assertions = config.assertions ?: false
         def testTimeout = config.test_timeout ?: ""
-        def buildTarget = config.build_target ?:  ""
+        def buildTarget = config.build_target ?:  "build"
+        def cmakeBuildTarget = config.cmake_build_target ?:  ""
         def noinstall = config.noinstall ?: false
         def thinlto = config.thinlto ?: false
         def sanitizer = config.sanitizer ?: ""
         def extraCmakeFlags = config.cmake_flags ?: []
 
-        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${build_type} build"
+        def cmd = "python llvm-zorg/zorg/jenkins/monorepo_build.py ${buildType} ${buildTarget}"
 
         if (cmakeType != "default") {
             cmd += " --cmake-type=${cmakeType}"
@@ -138,8 +130,8 @@ class ClangBuilder implements Serializable {
             cmd += " --timeout=${testTimeout}"
         }
 
-        if (buildTarget) {
-            cmd += " --cmake-build-target=${buildTarget}"
+        if (cmakeBuildTarget) {
+            cmd += " --cmake-build-target=${cmakeBuildTarget}"
         }
 
         if (noinstall) {
@@ -150,7 +142,7 @@ class ClangBuilder implements Serializable {
         cmakeFlags.add("-DPython3_EXECUTABLE=\$(which python)")
 
         if (thinlto) {
-            if (build_type == "cmake") {
+            if (buildType == "cmake") {
                 cmakeFlags.add("-DLLVM_ENABLE_LTO=Thin")
             } else {
                 cmd += " --thinlto"
