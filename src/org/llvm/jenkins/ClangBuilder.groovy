@@ -57,6 +57,17 @@ class ClangBuilder implements Serializable {
             "MACOSX_DEPLOYMENT_TARGET": stage1Mode ? "13.6" : null
         ]
 
+        def shellEnvVars = [:]
+        extraEnvVars.each { key, value ->
+            def strValue = value.toString()
+            if (strValue.contains('$')) {
+                // This needs to be expanded by shell
+                shellEnvVars[key] = strValue.replace('\\$', '$')
+            } else {
+                envVars[key] = value
+            }
+        }
+
         // Add custom environment variables
         extraEnvVars.each { key, value ->
             envVars[key] = value
@@ -73,6 +84,7 @@ class ClangBuilder implements Serializable {
 
                     script.sh """
                         set -u
+                        ${shellExportsStr}
                         ${stage1Mode ? 'rm -rf build.properties' : ''}
                         source ./venv/bin/activate
                         cd llvm-project
@@ -179,6 +191,17 @@ class ClangBuilder implements Serializable {
             envVars[key] = value
         }
 
+        def shellEnvVars = [:]
+        extraEnvVars.each { key, value ->
+            def strValue = value.toString()
+            if (strValue.contains('$')) {
+                // This needs to be expanded by shell
+                shellEnvVars[key] = strValue.replace('\\$', '$')
+            } else {
+                envVars[key] = value
+            }
+        }
+
         def envList = envVars.collect { k, v -> "${k}=${v}" }
 
         script.withEnv(envList) {
@@ -188,6 +211,7 @@ class ClangBuilder implements Serializable {
                     script.sh """
                         set -u
                         source ./venv/bin/activate
+                        ${shellExportsStr}
                         ${customScript}
                     """
                 } else {
@@ -202,6 +226,7 @@ class ClangBuilder implements Serializable {
                         set -u
                         source ./venv/bin/activate
                         rm -rf clang-build/testresults.xunit.xml
+                        ${shellExportsStr}
                         ${cmd}
                     """
                 }
