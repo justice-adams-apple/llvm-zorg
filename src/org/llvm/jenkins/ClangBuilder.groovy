@@ -18,8 +18,18 @@ class ClangBuilder implements Serializable {
                     userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
                 ])
             } else {
-                // Multibranch pipeline - use the SCM configuration from the job which includes timeout
-                script.checkout(script.scm)
+                if (script.params.GIT_SHA) {
+                    // Bisection pipeline - use specific git SHA
+                    script.checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: script.params.GIT_SHA]],
+                        extensions: [[$class: 'CloneOption', timeout: 30]],
+                        userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
+                    ])
+                } else {
+                    // Multibranch pipeline - use the SCM configuration from the job which includes timeout
+                    script.checkout(script.scm)
+                }
             }
         }
         script.dir('llvm-zorg') {
