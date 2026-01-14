@@ -7,6 +7,7 @@ def call(Map config = [:]) {
     def triggeredJobs = config.triggeredJobs ?: []
     def stagesToRun = config.stages ?: ['checkout', 'fetch', 'build', 'test']
     def jobName = config.jobName
+    def zorgBranch = config.zorgBranch
 
     if (!params.IS_BISECT_JOB) {
         properties([
@@ -41,6 +42,7 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         echo "Job Name: ${jobName}"
+                        echo "Zorg Branch: ${zorgBranch}"
                         echo "Build Config: ${buildConfig}"
                         echo "Test Config: ${testConfig}"
                         echo "Stages to run: ${stagesToRun}"
@@ -55,7 +57,7 @@ def call(Map config = [:]) {
                 steps {
                     script {
                         retry(3) {
-                            builder.checkoutStage()
+                            builder.checkoutStage(zorgBranch)
                         }
                     }
                 }

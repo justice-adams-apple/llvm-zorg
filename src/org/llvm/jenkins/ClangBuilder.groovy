@@ -7,7 +7,7 @@ class ClangBuilder implements Serializable {
         this.script = script
     }
 
-    def checkoutStage() {
+    def checkoutStage(zorgBranch) {
         script.dir('llvm-project') {
             if (script.params.IS_BISECT_JOB) {
                 // Bisection pipeline - use specific git SHA
@@ -25,8 +25,8 @@ class ClangBuilder implements Serializable {
         script.dir('llvm-zorg') {
             script.checkout([
                 $class: 'GitSCM',
-                branches: [[name: 'main']],
-                userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-zorg.git']]
+                branches: [[name: zorgBranch]],
+                userRemoteConfigs: [[url: 'https://github.com/justice-adams-apple/llvm-zorg.git']] //ToDo: change URL
             ])
         }
     }
