@@ -23,7 +23,7 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     // Trigger all jobs within the provided list
     def parallel_builds = [:]
     for (j in joblist) {
-        def jobname = env.BRANCH_NAME ? "${j}/${env.BRANCH_NAME}" : j
+        def jobname = env.BRANCH_NAME ? "${j}/${env.BRANCH_NAME.replace('/', '%2F')}" : j
         parallel_builds[jobname] = {
             def job_params = [
                 [$class: 'StringParameterValue',
