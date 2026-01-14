@@ -39,7 +39,7 @@ def call(Map config = [:]) {
 
                 // Trigger stage 1 job and wait for completion
                 def stage1Build = build(
-                    job: config.stage1Job,
+                    job: jobName,
                     parameters: [
                         string(name: 'GIT_SHA', value: params.GIT_SHA),
                         string(name: 'BISECT_GOOD', value: params.BISECT_GOOD),
