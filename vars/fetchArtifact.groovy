@@ -14,13 +14,13 @@ def call(Map config = [:]) {
             def pythonCmd = """
                 source ./venv/bin/activate
                 python ./artifact_manager.py \\
-                    --job-name "${jobName}" \\
                     --workspace "\$WORKSPACE" \\
-                    --output-file artifact_result.properties
-            """
+                    --output-file artifact_result.properties"""
 
             if (artifactParam) {
                 pythonCmd += " --artifact \"${artifactParam}\""
+            } else {
+                pythonCmd += " --job-name \"${jobName}\""
             }
 
             def scriptResult = sh(
