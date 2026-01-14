@@ -73,6 +73,12 @@ class ClangBuilder implements Serializable {
             envVars[key] = value
         }
 
+        def shellExports = []
+        shellEnvVars.each { k, v ->
+           shellExports.add("export ${k}=${v}")
+        }
+        def shellExportsStr = shellExports.join('\n')
+
         // Filter out null values
         envVars = envVars.findAll { k, v -> v != null }
         def envList = envVars.collect { k, v -> "${k}=${v}" }
@@ -201,6 +207,12 @@ class ClangBuilder implements Serializable {
                 envVars[key] = value
             }
         }
+
+        def shellExports = []
+        shellEnvVars.each { k, v ->
+           shellExports.add("export ${k}=${v}")
+        }
+        def shellExportsStr = shellExports.join('\n')
 
         def envList = envVars.collect { k, v -> "${k}=${v}" }
 
