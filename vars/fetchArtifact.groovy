@@ -8,7 +8,7 @@ def call(Map config = [:]) {
             def jobName = env.BRANCH_NAME ? "${config.stage1Job}/${env.BRANCH_NAME}" : config.stage1Job
 
             // Determine if we should use a specific artifact parameter
-            def artifactParam = params.IS_BISECT_JOB ? null : params.ARTIFACT
+            def artifactParam = params.ARTIFACT
 
             // Call Python script to handle artifact logic
             def pythonCmd = """
