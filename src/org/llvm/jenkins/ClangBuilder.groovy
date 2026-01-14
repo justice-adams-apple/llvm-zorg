@@ -15,7 +15,7 @@ class ClangBuilder implements Serializable {
                     $class: 'GitSCM',
                     branches: [[name: script.params.GIT_SHA]],
                     extensions: [[$class: 'CloneOption', timeout: 30]],
-                    userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/justice-adams-apple/llvm-project.git']] //ToDo: Change URL
                 ])
             } else {
                 if (script.params.GIT_SHA) {
@@ -24,7 +24,7 @@ class ClangBuilder implements Serializable {
                         $class: 'GitSCM',
                         branches: [[name: script.params.GIT_SHA]],
                         extensions: [[$class: 'CloneOption', timeout: 30]],
-                        userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
+                        userRemoteConfigs: [[url: 'https://github.com/justice-adams-apple/llvm-project.git']] //ToDo: Change URL
                     ])
                 } else {
                     // Multibranch pipeline - use the SCM configuration from the job which includes timeout
