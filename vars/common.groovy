@@ -35,7 +35,7 @@ private def clone_llvm_project(name, sha) {
                         timeout: 30
                     ]
                 ],
-                userRemoteConfigs: [[url: 'https://github.com/llvm/llvm-project.git']]
+                userRemoteConfigs: [[url: 'https://github.com/justice-adams-apple/llvm-project.git']] //ToDo: Change URL
             ]
         }
     }
