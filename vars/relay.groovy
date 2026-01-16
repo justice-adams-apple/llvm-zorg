@@ -43,7 +43,8 @@ private def relay_steps(joblist, artifact_url, last_good_properties_url) {
     // Workaround to prevent LNT jobs from running in parallel and overloading the LNT server with submissions
     if(joblist.any { it.contains("lnt-ctmark") }) {
          for (j in joblist) {
-            parallel_builds[j].call()
+            def jobname = env.BRANCH_NAME ? "${j}/${env.BRANCH_NAME.replace('/', '%2F')}" : j
+            parallel_builds[jobname].call()
          }
     } else {
         parallel parallel_builds
