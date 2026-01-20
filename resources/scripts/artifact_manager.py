@@ -75,7 +75,7 @@ class ArtifactManager:
         bisection version of the stage 1 job, so we return two artifact names to check."""
         tar_name = f"clang-d{git_distance}-g{git_sha}.tar.gz"
 
-        if job_name.contains("/bisect/"):
+        if "/bisect/" in job_name:
             mainline_job_name = job_name.replace("/bisect/", "")
             bisection_artifact = f"{job_name}/{tar_name}"
             mainline_artifact = f"{mainline_job_name}/{tar_name}"
