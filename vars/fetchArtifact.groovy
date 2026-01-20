@@ -5,7 +5,8 @@ def call(Map config = [:]) {
 
     withEnv(["PATH+EXTRA=/usr/bin:/usr/local/bin"]) {
         withCredentials([string(credentialsId: 's3_resource_bucket', variable: 'S3_BUCKET')]) {
-            def jobName = env.BRANCH_NAME ? "${config.stage1Job}/${env.BRANCH_NAME}" : config.stage1Job
+            def stage1JobName = params.IS_BISECT_JOB ? "Green-Dragon/bisect/${config.stage1Job}" : "Green-Dragon/${config.stage1Job}"
+            def jobName = env.BRANCH_NAME ? "${stage1JobName}/${env.BRANCH_NAME}" : stage1JobName
 
             // Determine if we should use a specific artifact parameter
             def artifactParam = params.ARTIFACT
@@ -46,6 +47,7 @@ def call(Map config = [:]) {
                         string(name: 'BISECT_BAD', value: params.BISECT_BAD),
                         booleanParam(name: 'IS_BISECT_JOB', value: true),
                         booleanParam(name: 'SKIP_TESTS', value: true),
+                        booleanParam(name: 'SKIP_TRIGGER', value: true)
                     ],
                     wait: true,
                     propagate: true
