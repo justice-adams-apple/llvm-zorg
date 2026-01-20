@@ -76,7 +76,7 @@ class ArtifactManager:
         tar_name = f"clang-d{git_distance}-g{git_sha}.tar.gz"
 
         if "/bisect/" in job_name:
-            mainline_job_name = job_name.replace("/bisect/", "")
+            mainline_job_name = job_name.replace("/bisect/", "/")
             bisection_artifact = f"{job_name}/{tar_name}"
             mainline_artifact = f"{mainline_job_name}/{tar_name}"
             return mainline_artifact, bisection_artifact
